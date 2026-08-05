@@ -12,15 +12,15 @@
 
 架构宪法（详见 `proposals/`，不进 git）：
 
-- **三个独立 Service，同一仓库**：`frontend`（Astro 静态站）、`backend`（FastAPI 推理）、`nginx`（反向代理网关）。结构参考 `quant-strategy-lab`。
+- **三个独立 Service，同一仓库**：`frontend`（Astro 静态站）、`backend`（FastAPI 推理）、`gateway`（反向代理网关）。结构参考 `quant-strategy-lab`。
 - **Skill 包 = 唯一真源**：网站后端 `import` 它，下载 zip 也打包它，改一处处处生效。
 - **无状态优先**：需要长期保留的数据（模型权重、配置）随镜像构建或挂持久卷，不依赖容器本地盘。
-- **每个服务一个目录、自带 `Dockerfile`**：`backend/Dockerfile`、`frontend/Dockerfile`、`nginx/Dockerfile`。
+- **每个服务一个目录、自带 `Dockerfile`**：`backend/Dockerfile`、`frontend/Dockerfile`、`gateway/Dockerfile`。
 
 ## 目录结构
 
 ```
-frontend/                 前端 Astro 静态站（纯静态，由 nginx 网关反代访问）
+frontend/                 前端 Astro 静态站（纯静态，由网关反代访问）
   src/pages/              首页 / docs / tools / skills
   src/data/tools.ts       工具清单（新增纯前端工具只改这里）
   public/skills/          构建期生成的 Skill zip（可下载）
@@ -33,11 +33,11 @@ backend/                  后端 FastAPI（只服务需算力的工具）
   app/adapters/           纯适配层，调用 Skill 核心
   pyproject.toml/uv.lock  后端 + 核心依赖（python，uv 管理）
   Dockerfile              Zeabur 按服务名 `backend` 匹配
-nginx/                    网关（反向代理）服务
+gateway/                  网关（反向代理）服务
   nginx.conf.template     配置模板（envsubst 注入 PORT/BACKEND_URL/FRONTEND_URL）
   nginx.local.conf        本地 docker-compose 用（写死 compose 服务名）
   start.sh                启动时 envsubst 注入变量后拉起 nginx
-  Dockerfile              Zeabur 按服务名 `nginx` 匹配
+  Dockerfile              Zeabur 按服务名 `gateway` 匹配
 skills/                   可下载 Skill（唯一真源）
   remove-background/      ← 核心包 remove_background_skill/ + CLI + SKILL.md
   manifest.json           版本清单（下载页与打包脚本共读）
@@ -90,7 +90,7 @@ python scripts/package_skills.py        # 输出到 frontend/public/skills/
 
 ## 部署（Zeabur）
 
-GitHub 推送 `main` 自动部署。仓库根需有 `backend/Dockerfile`、`frontend/Dockerfile`、`nginx/Dockerfile`。
+GitHub 推送 `main` 自动部署。仓库根需有 `backend/Dockerfile`、`frontend/Dockerfile`、`gateway/Dockerfile`。
 
 ### 建三个 Service
 
@@ -98,25 +98,25 @@ GitHub 推送 `main` 自动部署。仓库根需有 `backend/Dockerfile`、`fron
 
 | 项 | 网关 Service | 前端 Service | 后端 Service |
 |---|---|---|---|
-| 服务名 | `nginx` | `frontend` | `backend` |
-| Dockerfile 路径 | `nginx/Dockerfile` | `frontend/Dockerfile` | `backend/Dockerfile` |
+| 服务名 | `gateway` | `frontend` | `backend` |
+| Dockerfile 路径 | `gateway/Dockerfile` | `frontend/Dockerfile` | `backend/Dockerfile` |
 | Root Directory | **不设**（构建根=仓库根，否则读不到 `skills/`） | **不设** | **不设** |
-| 端口 | `80`（nginx，读 `PORT`） | `80`（nginx 纯静态，内部） | `8000`（uvicorn，读 `PORT`） |
+| 端口 | `80`（网关，读 `PORT`） | `80`（nginx 纯静态，内部） | `8000`（uvicorn，读 `PORT`） |
 
 > 若 Zeabur 框架自动检测误判（仓库根有 `pyproject.toml`/`package.json`），在高级设置显式锁定 Dockerfile 路径即可。
 
 ### 域名与变量
 
-**网关由独立的 `nginx` 服务充当**（配置见 `nginx/nginx.conf.template`）：它把 `/api/*` 反代到 `backend`、把 `/` 反代到 `frontend`。**因此你不需要在 Zeabur 配任何路径路由 / Path 规则**，只要做三件事：
+**网关由独立的 `gateway` 服务充当**（配置见 `gateway/nginx.conf.template`）：它把 `/api/*` 反代到 `backend`、把 `/` 反代到 `frontend`。**因此你不需要在 Zeabur 配任何路径路由 / Path 规则**，只要做三件事：
 
-1. **域名只绑 `nginx` 服务**（浏览器全程只跟本站同源通信，`frontend`/`backend` 不必绑公网子域）。
-2. 在 **`nginx` 服务**设两个环境变量，指向 `backend` / `frontend` 的**内部地址**（Zeabur 服务设置里可见，通常形如 `http://<service>.zeabur.internal:<port>`，具体前缀随项目而定）：
+1. **域名只绑 `gateway` 服务**（浏览器全程只跟本站同源通信，`frontend`/`backend` 不必绑公网子域）。
+2. 在 **`gateway` 服务**设两个环境变量，指向 `backend` / `frontend` 的**内部地址**（Zeabur 服务设置里可见，通常形如 `http://<service>.zeabur.internal:<port>`，具体前缀随项目而定）：
    - `BACKEND_URL` = `http://backend.zeabur.internal:8000`（或 backend 服务的实际内部地址）
    - `FRONTEND_URL` = `http://frontend.zeabur.internal:80`（或 frontend 服务的实际内部地址）
    - 网关会把 `本站域名/api/v1/remove-background` 转成 `BACKEND_URL/v1/remove-background` 发给后端。
 3. `backend` 服务可选设 `MAX_REQUEST_MB` / `MAX_FILE_MB` / `MAX_PIXELS` / `MODEL_NAME`（见 `backend/app/settings.py`）。
 
-前端默认走相对路径 `/api`（无需任何构建变量）；只有当你想强制指定后端时才设 `PUBLIC_API_BASE_URL` 覆盖。因为走 nginx 同源反代，**无需 CORS**。
+前端默认走相对路径 `/api`（无需任何构建变量）；只有当你想强制指定后端时才设 `PUBLIC_API_BASE_URL` 覆盖。因为走网关同源反代，**无需 CORS**。
 
 ### 模型权重
 
