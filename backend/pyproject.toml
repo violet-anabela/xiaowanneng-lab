@@ -13,7 +13,21 @@ dependencies = [
     "Pillow>=10",
     # 显式锁定 onnxruntime（CPU），与 Skill requirements.txt 主版本一致，避免网站与下载版用不同运行时。
     "onnxruntime>=1.18,<2",
+    # rembg 运行所需的基础科学栈（显式列出以稳定版本）。
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "scikit-image>=0.19",
+    "imageio>=2.27",
+    "requests>=2.28",
 ]
 
 [tool.uv]
 package = false
+# pymatting 1.1.14 把 numba 锁死在旧版，连带 llvmlite 0.36 仅支持 Python <3.10，
+# 导致整条链在 Python 3.10+ 无法构建。网站抠图只用 u2net 推理、不触发 alpha matting，
+# 但 rembg 顶层 import 强制拉 pymatting。用 override 把 numba/llvmlite 强制升到
+# 支持 3.12+ 的版本，绕过该约束（pymatting 在运行期不进入 alpha matting 路径时不受影响）。
+override-dependencies = [
+    "numba>=0.60",
+    "llvmlite>=0.43",
+]

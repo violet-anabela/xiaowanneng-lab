@@ -12,10 +12,16 @@ server {
     add_header X-Frame-Options SAMEORIGIN always;
     add_header Referrer-Policy strict-origin-when-cross-origin always;
 
+    # 用变量持有上游地址：proxy_pass 用变量时不作启动期 DNS 解析，
+    # 避免 Zeabur 上 nginx 先于 backend 启动时因解析不到主机名而启动失败（运行期由 Zeabur 内部 DNS 解析）。
+    set $backend_upstream  "${BACKEND_URL}";
+    set $frontend_upstream "${FRONTEND_URL}";
+
     # ===== API 反代：/api/* 转给后端（剥掉 /api 前缀）=====
     # 例如 /api/v1/remove-background -> BACKEND_URL/v1/remove-background
     location /api/ {
-        proxy_pass ${BACKEND_URL}/;
+        rewrite ^/api/(.*)$ /$1 break;
+        proxy_pass $backend_upstream;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -28,17 +34,19 @@ server {
 
     # 健康检查直达后端（便于经网关排障）
     location = /livez {
-        proxy_pass ${BACKEND_URL}/livez;
+        rewrite ^ /livez break;
+        proxy_pass $backend_upstream;
         proxy_set_header Host $host;
     }
     location = /readyz {
-        proxy_pass ${BACKEND_URL}/readyz;
+        rewrite ^ /readyz break;
+        proxy_pass $backend_upstream;
         proxy_set_header Host $host;
     }
 
     # ===== 其余请求：反代到前端静态站 =====
     location / {
-        proxy_pass ${FRONTEND_URL}/;
+        proxy_pass $frontend_upstream;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
