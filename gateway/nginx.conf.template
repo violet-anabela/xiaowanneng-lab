@@ -1,11 +1,16 @@
 # 网关（反向代理）配置模板。Zeabur 注入 PORT / BACKEND_URL / FRONTEND_URL。
-# start.sh 用 envsubst 只替换这三个变量后写入 default.conf。
+# start.sh 用 envsubst 替换 PORT / BACKEND_URL / FRONTEND_URL / RESOLVER 后写入 default.conf。
 # 约定：前端站只暴露静态资源（由 frontend 容器托管），所有 /api 流量在此反代到 backend。
 server {
     listen       ${PORT};
     server_name  _;
 
     server_tokens off;
+
+    # 变量形式 proxy_pass 必须在运行期解析上游主机名，nginx 要求显式配置 resolver，
+    # 否则启动即报 "no resolver defined" 而崩溃。RESOLVER 由 start.sh 注入
+    #（优先取 /etc/resolv.conf 的 nameserver，兜底 127.0.0.11）。
+    resolver ${RESOLVER} valid=10s ipv6=off;
 
     # 基础安全响应头
     add_header X-Content-Type-Options nosniff always;

@@ -9,9 +9,15 @@ PORT="${PORT:-80}"
 BACKEND_URL="${BACKEND_URL:-http://backend:8000}"
 FRONTEND_URL="${FRONTEND_URL:-http://frontend:80}"
 
-export PORT BACKEND_URL FRONTEND_URL
+# resolver：nginx 变量形式 proxy_pass 必须配 resolver 才能运行期解析上游。
+# 优先读容器 /etc/resolv.conf 的 IPv4 nameserver（排除 IPv6，因 resolver 配了 ipv6=off），
+# 兜底 Docker 内置 DNS 127.0.0.11。
+RESOLVER="$(awk '/^nameserver/ && $2 !~ /:/ {print $2; exit}' /etc/resolv.conf 2>/dev/null)"
+RESOLVER="${RESOLVER:-127.0.0.11}"
 
-envsubst '${PORT} ${BACKEND_URL} ${FRONTEND_URL}' \
+export PORT BACKEND_URL FRONTEND_URL RESOLVER
+
+envsubst '${PORT} ${BACKEND_URL} ${FRONTEND_URL} ${RESOLVER}' \
     < /etc/nginx/nginx.conf.template \
     > /etc/nginx/conf.d/default.conf
 
