@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import manifest from '../../data/skills-manifest.json';
+
+const list = Object.entries(manifest.skills).map(([slug, m]) => ({ slug, ...m }));
+---
+
+<Base title="Skills">
+  <h1>Skills</h1>
+  <p class="muted">
+    可下载、安装到兼容 Agent（如 WorkBuddy）的技能包。版本与网站使用的核心源码同源。
+  </p>
+
+  <div class="card-grid" style="margin-top:20px;">
+    {list.map((s) => (
+      <div class="card">
+        <h3>{s.title}</h3>
+        <p>版本 <code>{s.version}</code></p>
+        <p style="margin-top:10px;">
+          <a href={`/skills/${s.slug}.zip`}>下载 zip</a>
+          {' · '}
+          <a href={`/skills/${s.slug}-v${s.version}.zip`}>版本化下载</a>
+        </p>
+      </div>
+    ))}
+  </div>
+
+  <p class="muted" style="font-size:13px; margin-top:18px;">
+    安装方法见各 Skill 包内的 <code>SKILL.md</code>。下载解压后放入 Agent 的 skills 目录即可。
+  </p>
+</Base>

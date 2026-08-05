@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+const modules = import.meta.glob('../content/docs/*.md', { eager: true });
+const docs = Object.entries(modules).map(([path, mod]) => {
+  const slug = path.split('/').pop().replace(/\.md$/, '');
+  return {
+    slug,
+    title: mod.frontmatter?.title ?? slug,
+    description: mod.frontmatter?.description ?? '',
+    url: `/docs/${slug}`,
+  };
+});
+---
+
+<Base title="文档">
+  <h1>文档</h1>
+  <p class="muted">我写的笔记与复盘。纯 Markdown 存于 Git，重建即恢复。</p>
+  <div class="card-grid" style="margin-top:20px;">
+    {docs.map((d) => (
+      <a class="card" href={d.url}>
+        <h3>{d.title}</h3>
+        <p>{d.description}</p>
+      </a>
+    ))}
+  </div>
+</Base>

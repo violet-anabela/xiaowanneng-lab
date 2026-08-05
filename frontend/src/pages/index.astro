@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="小完能实验室">
+  <section style="text-align:center; padding: 24px 0 8px;">
+    <h1 style="font-size: 32px; margin: 0 0 8px;">🔩 小完能实验室</h1>
+    <p class="muted" style="font-size: 17px; max-width: 560px; margin: 0 auto;">
+      我写的文档、顺手做的小工具，以及一些能直接拿去用的 Agent Skill。
+    </p>
+  </section>
+
+  <div class="card-grid" style="margin-top: 32px;">
+    <a class="card" href="/docs">
+      <h3>📚 文档</h3>
+      <p>学习笔记、项目复盘、技术随笔。纯 Markdown 存于 Git，重建即恢复。</p>
+    </a>
+    <a class="card" href="/tools">
+      <h3>🛠 工具</h3>
+      <p>小工具集合：抠图、JSON 格式化、Base64……多数在浏览器内运行。</p>
+    </a>
+    <a class="card" href="/skills">
+      <h3>📦 Skills</h3>
+      <p>可直接下载、安装到兼容 Agent（如 WorkBuddy）的技能包。</p>
+    </a>
+  </div>
+</Base>

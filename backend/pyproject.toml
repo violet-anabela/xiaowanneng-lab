@@ -1,0 +1,19 @@
+[project]
+name = "xiaowanneng-lab"
+version = "0.1.0"
+description = "小完能实验室：文档 + 小工具 + 可下载 Skill（API/共享核心依赖由 uv 管理）"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115,<1.0",
+    "uvicorn[standard]>=0.34,<1.0",
+    # 显式锁定 Starlette >= 0.47.2：含 multipart 与临时文件安全修复（方案 §8.14）。
+    "starlette>=0.47.2",
+    "python-multipart>=0.0.18",
+    "rembg>=2.0,<3",
+    "Pillow>=10",
+    # 显式锁定 onnxruntime（CPU），与 Skill requirements.txt 主版本一致，避免网站与下载版用不同运行时。
+    "onnxruntime>=1.18,<2",
+]
+
+[tool.uv]
+package = false

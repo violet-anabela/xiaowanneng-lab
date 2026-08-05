@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob('../../content/docs/*.md', { eager: true });
+  return Object.keys(modules).map((path) => ({
+    params: { slug: path.split('/').pop().replace(/\.md$/, '') },
+  }));
+}
+
+const modules = import.meta.glob('../../content/docs/*.md', { eager: true });
+const { slug } = Astro.params;
+const entry = Object.entries(modules).find(
+  ([path]) => path.split('/').pop().replace(/\.md$/, '') === slug
+);
+if (!entry) return Astro.redirect('/docs');
+const mod = entry[1];
+const { Content } = mod;
+---
+
+<Base title={mod.frontmatter?.title ?? slug}>
+  <a href="/docs">← 返回文档</a>
+  <article class="prose" style="margin-top:16px;">
+    <Content />
+  </article>
+</Base>

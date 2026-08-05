@@ -1,0 +1,3 @@
+# 供下载者安装（与仓库根 pyproject.toml 锁定相同主版本，避免网站与下载版用不同 rembg/Pillow）。
+rembg>=2.0,<3
+Pillow>=10

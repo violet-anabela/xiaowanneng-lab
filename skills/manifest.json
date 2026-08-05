@@ -1,0 +1,9 @@
+{
+  "skills": {
+    "remove-background": {
+      "version": "1.0.0",
+      "source": "skills/remove-background",
+      "title": "图片去背景"
+    }
+  }
+}

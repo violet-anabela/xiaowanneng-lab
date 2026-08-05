@@ -3,6 +3,13 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Node.js dependencies
+node_modules/
+
+# Local project data (WorkBuddy memory) and IDE
+.workbuddy/
+.idea/
+
 # C extensions
 *.so
 
@@ -165,7 +172,10 @@ venv.bak/
 .ropeproject
 
 # mkdocs documentation
-/site
+# NOTE: the "/site" rule is intentionally disabled — our Astro frontend source lives in /frontend.
+# Explicitly ignore only the Astro build output and cache inside it (source is committed):
+/frontend/dist/
+/frontend/.astro/
 
 # mypy
 .mypy_cache/
@@ -216,3 +226,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# 规划文档：我(WorkBuddy)与 GPT 来回打磨方案的草稿，非站点交付物，不进 git
+/proposals/
