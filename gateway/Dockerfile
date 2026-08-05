@@ -1,8 +1,9 @@
-# 网关（反向代理）服务构建（Zeabur 按服务名 `gateway` 自动匹配本文件）。
-# 构建根 = 仓库根（Service 不设 Root Directory）。
+# 网关（反向代理）服务构建。
+# 构建上下文 = gateway/ 目录（Zeabur 该服务 Root Directory 设为 gateway）。
+# 因此 COPY 路径相对 gateway/，不再带 gateway/ 前缀，避免路径解析错位。
 FROM nginx:alpine
-COPY gateway/nginx.conf.template /etc/nginx/nginx.conf.template
-COPY gateway/start.sh /start.sh
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
+COPY start.sh /start.sh
 RUN chmod +x /start.sh
 ENV PORT=80
 EXPOSE 80
