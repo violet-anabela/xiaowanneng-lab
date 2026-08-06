@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob('../../content/development/*.md', { eager: true });
+  return Object.keys(modules).map((path) => ({
+    params: { slug: path.split('/').pop().replace(/\.md$/, '') },
+  }));
+}
+
+const modules = import.meta.glob('../../content/development/*.md', { eager: true });
+const { slug } = Astro.params;
+const entry = Object.entries(modules).find(
+  ([path]) => path.split('/').pop().replace(/\.md$/, '') === slug
+);
+if (!entry) return Astro.redirect('/development/');
+const mod = entry[1];
+const { Content } = mod;
+---
+
+<Base title={`${mod.frontmatter?.title ?? slug} · 开发文档`}>
+  <a class="back-link" href="/development/"><span aria-hidden="true">←</span> 返回队内档案</a>
+  <div class="doc-sheet">
+    <span class="doc-stamp" aria-hidden="true">INTERNAL<br />FILE</span>
+    <article class="prose doc-article">
+      <Content />
+    </article>
+  </div>
+
+  <style>
+    .doc-sheet { position: relative; max-width: 850px; margin: 0 auto; }
+    .doc-stamp {
+      position: absolute;
+      top: -22px;
+      right: -14px;
+      z-index: 1;
+      width: 78px;
+      height: 78px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 3px double var(--ink-faint);
+      border-radius: 50%;
+      color: var(--ink-faint);
+      background: rgba(255, 253, 247, 0.7);
+      font: 800 9px/1.4 var(--font-mono);
+      letter-spacing: 0.12em;
+      transform: rotate(12deg);
+      opacity: 0.85;
+    }
+
+    @media (max-width: 620px) {
+      .doc-stamp { top: -18px; right: 0; width: 64px; height: 64px; font-size: 8px; }
+    }
+  </style>
+</Base>

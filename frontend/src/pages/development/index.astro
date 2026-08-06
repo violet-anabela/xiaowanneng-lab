@@ -1,0 +1,107 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const modules = import.meta.glob('../../content/development/*.md', { eager: true });
+const docs = Object.entries(modules)
+  .map(([path, mod]) => {
+    const slug = path.split('/').pop().replace(/\.md$/, '');
+    return {
+      slug,
+      title: mod.frontmatter?.title ?? slug,
+      description: mod.frontmatter?.description ?? '',
+      service: mod.frontmatter?.service ?? '',
+      order: Number(mod.frontmatter?.order ?? 999),
+      url: `/development/${slug}/`,
+    };
+  })
+  .sort((a, b) => a.order - b.order);
+
+const serviceMeta = {
+  frontend: { short: 'FE', status: 'STATIC' },
+  backend: { short: 'BE', status: 'API' },
+  gateway: { short: 'GW', status: 'PROXY' },
+};
+---
+
+<Base title="开发文档 · 小完能实验室" description="队内档案：各项服务的开发与部署说明。">
+  <header class="page-heading">
+    <p class="eyebrow">Internal archive · dev reference</p>
+    <h1>项目如何构建，<br /><span class="hl">代码如何运行</span></h1>
+    <p>这里专门记录网站自身的服务结构、接口、环境变量和部署方式，并在构建时与实际代码自动核对。</p>
+  </header>
+
+  <div class="section-bar">
+    <div>
+      <span>PROJECT SERVICES</span>
+      <strong>服务档案</strong>
+    </div>
+    <span class="sync-badge">BUILD-TIME SYNC CHECK</span>
+  </div>
+
+  <div class="archive-grid">
+    {docs.map((doc) => {
+      const meta = serviceMeta[doc.service] ?? { short: 'SRV', status: 'SERVICE' };
+      return (
+        <a class="card archive-card" href={doc.url}>
+          <div class="card-top">
+            <span class="service-mark">{meta.short}</span>
+            <span class="service-status">{meta.status}</span>
+          </div>
+          <h2>{doc.title}</h2>
+          <p>{doc.description}</p>
+          <span class="open-doc">打开档案 <i aria-hidden="true">→</i></span>
+        </a>
+      );
+    })}
+  </div>
+
+  <style>
+    .section-bar { margin-bottom: 26px; display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+    .section-bar > div { display: grid; gap: 6px; }
+    .section-bar > div span { color: var(--ink-faint); font: 700 9px/1 var(--font-mono); letter-spacing: .18em; }
+    .section-bar > div strong { font-family: var(--font-serif); font-size: 24px; }
+    .sync-badge {
+      padding: 8px 12px;
+      border: 2px solid var(--teal);
+      border-radius: var(--radius);
+      color: var(--teal);
+      font: 700 8.5px/1.4 var(--font-mono);
+      letter-spacing: .12em;
+      white-space: nowrap;
+      transform: rotate(2deg);
+      opacity: .85;
+    }
+
+    .archive-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+    .archive-card { display: flex; flex-direction: column; min-height: 230px; box-shadow: 5px 5px 0 rgba(35, 50, 77, 0.12); }
+    .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+    .service-mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--paper);
+      font: 800 12px/1 var(--font-mono);
+      letter-spacing: .06em;
+      transform: rotate(-3deg);
+    }
+    .service-status { color: var(--ink-faint); font: 700 9px/1 var(--font-mono); letter-spacing: .14em; }
+    .archive-card h2 { font-size: 19px; }
+    .archive-card p { flex: 1; min-height: 42px; font-size: 12.5px; }
+    .open-doc { margin-top: 20px; color: var(--teal); font-weight: 700; font-size: 12.5px; }
+    .open-doc i { font-style: normal; }
+
+    @media (max-width: 680px) {
+      .section-bar { align-items: flex-start; flex-direction: column; }
+      .archive-grid { grid-template-columns: 1fr; }
+      .archive-card { min-height: 0; }
+    }
+
+    @media (min-width: 681px) and (max-width: 920px) {
+      .archive-grid { grid-template-columns: 1fr 1fr; }
+      .archive-card:last-child { grid-column: 1 / -1; min-height: 0; }
+    }
+  </style>
+</Base>
