@@ -26,7 +26,7 @@ const docs = Object.entries(modules)
   <div class="logbook">
     <div class="logbook-head">
       <span class="log-count">共 {String(docs.length).padStart(2, '0')} 篇考察记录</span>
-      <span class="log-label">EXPEDITION LOGBOOK</span>
+      <span class="log-label"><i class="paw-i" aria-hidden="true"></i> EXPEDITION LOGBOOK</span>
     </div>
     {docs.map((doc, index) => (
       <a class="log-entry" href={doc.url}>

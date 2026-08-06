@@ -31,8 +31,8 @@ services:
 
   gateway:
     build:
-      context: .
-      dockerfile: gateway/Dockerfile
+      context: ./gateway
+      dockerfile: Dockerfile
     environment:
       PORT: 80
       BACKEND_URL: http://backend:8000

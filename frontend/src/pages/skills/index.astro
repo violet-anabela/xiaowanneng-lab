@@ -19,7 +19,8 @@ const list = Object.entries(manifest.skills).map(([slug, meta]) => ({ slug, ...m
           <span class="pack-no">PACK {String(index + 1).padStart(2, '0')}</span>
           <strong>SK</strong>
           <span class="pack-ver">v{skill.version}</span>
-          <i class="string" ></i>
+          <i class="string"></i>
+          <i class="paw-i pack-paw" aria-hidden="true"></i>
         </div>
         <div class="supply-content">
           <div class="supply-meta">
@@ -101,6 +102,17 @@ const list = Object.entries(manifest.skills).map(([slug, meta]) => ({ slug, ...m
       border: 2px solid var(--ink);
       border-radius: 50%;
       background: var(--paper);
+    }
+
+    /* 像是猫踩过签条留下的爪印 */
+    .pack-paw {
+      position: absolute;
+      right: 18px;
+      bottom: 14px;
+      color: var(--gold);
+      font-size: 22px;
+      opacity: 0.7;
+      transform: rotate(-24deg);
     }
 
     .supply-content { padding: clamp(26px, 4.5vw, 44px); display: flex; flex-direction: column; justify-content: center; }

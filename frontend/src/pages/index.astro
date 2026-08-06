@@ -44,6 +44,10 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     </div>
   </section>
 
+  <div class="paw-trail crossing" aria-hidden="true">
+    <i class="paw-i"></i><i class="paw-i"></i><i class="paw-i"></i><i class="paw-i"></i><i class="paw-i"></i><i class="paw-i"></i><i class="paw-i"></i>
+  </div>
+
   <section class="trails">
     <div class="section-head">
       <h2>本次远征的三条路线</h2>
@@ -54,21 +58,21 @@ const pad = (n: number) => n.toString().padStart(2, '0');
         <span class="no no-red">TRAIL 01</span>
         <h3>文档与复盘</h3>
         <p>把探索过程写下来：技术笔记、项目决策，以及值得记住的坑。</p>
-        <span class="go go-red">沿着足迹走 →</span>
+        <span class="go go-red">沿着足迹走 <i class="paw-i" aria-hidden="true"></i></span>
         <span class="count">{pad(documentCount)} 篇记录</span>
       </a>
       <a class="card trail-card" href="/tools/">
         <span class="no no-teal">TRAIL 02</span>
         <h3>轻量工具箱</h3>
         <p>图片去背景等实用装备。该在浏览器完成的就不上传，需要算力的交给后端。</p>
-        <span class="go go-teal">打开背包 →</span>
+        <span class="go go-teal">打开背包 <i class="paw-i" aria-hidden="true"></i></span>
         <span class="count">{pad(availableTools)} 件可用</span>
       </a>
       <a class="card trail-card" href="/skills/">
         <span class="no no-gold">TRAIL 03</span>
         <h3>可复用 Skills</h3>
         <p>下载、解压、安装，让任何兼容 Skill 的 Agent 直接获得新能力。</p>
-        <span class="go go-gold">领取补给 →</span>
+        <span class="go go-gold">领取补给 <i class="paw-i" aria-hidden="true"></i></span>
         <span class="count">{pad(skillCount)} 个补给包</span>
       </a>
     </div>
@@ -77,13 +81,13 @@ const pad = (n: number) => n.toString().padStart(2, '0');
   <section class="crew">
     <div class="section-head">
       <h2>考察队成员档案</h2>
-      <span>MEET THE CREW</span>
+      <span><i class="paw-i" aria-hidden="true"></i> MEET THE CREW</span>
     </div>
     <div class="crew-grid">
       <article class="card crew-card">
         <span class="no no-red">CAT.01</span>
         <div class="crew-top">
-          <span class="crew-avatar"><img src="/assets/cat-shiyi.png" alt="奶牛猫沈十一" width="512" height="512" /></span>
+          <span class="crew-avatar"><img src="/assets/photo-shiyi.jpg" alt="奶牛猫沈十一" width="600" height="600" /></span>
           <div class="crew-id">
             <h3>沈十一</h3>
             <span class="crew-breed">奶牛猫 · 行动担当</span>
@@ -101,7 +105,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
       <article class="card crew-card">
         <span class="no no-teal">CAT.02</span>
         <div class="crew-top">
-          <span class="crew-avatar"><img src="/assets/cat-qiuqiu.png" alt="长毛银渐层沈球球" width="512" height="512" /></span>
+          <span class="crew-avatar"><img src="/assets/photo-qiuqiu.jpg" alt="长毛银渐层沈球球" width="600" height="600" /></span>
           <div class="crew-id">
             <h3>沈球球</h3>
             <span class="crew-breed">长毛银渐层 · 军师担当</span>
@@ -220,6 +224,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
       transform: rotate(-5deg);
     }
 
+    .paw-trail.crossing { margin: 78px auto -30px; transform: rotate(-4deg); }
     .trails { margin-top: 100px; }
     .section-head {
       display: flex;
@@ -248,6 +253,8 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     .no-gold { background: var(--gold); }
     .trail-card p { flex: 1; }
     .go { margin-top: 22px; font-weight: 700; font-size: 13.5px; }
+    .go .paw-i { transition: transform 180ms ease; }
+    .trail-card:hover .go .paw-i { transform: rotate(20deg) scale(1.25); }
     .go-red { color: var(--red); }
     .go-teal { color: var(--teal); }
     .go-gold { color: #a87c22; }
