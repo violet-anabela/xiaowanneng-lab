@@ -11,13 +11,19 @@ RUN python scripts/package_skills.py --output /out/skills
 
 # 阶段 2：构建 Astro 静态站。
 FROM node:22-alpine AS site-builder
-WORKDIR /app
+WORKDIR /repo/frontend
 # 公开变量在构建期注入（Zeabur ARG/ENV），进入前端产物，不能放秘密。
 ARG PUBLIC_API_BASE_URL
 ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend ./
+# prebuild 会读取这些真实配置，核对三份开发文档是否仍与当前代码一致。
+COPY docker-compose.yml /repo/docker-compose.yml
+COPY scripts/check_dev_docs.mjs /repo/scripts/check_dev_docs.mjs
+COPY backend/Dockerfile /repo/backend/Dockerfile
+COPY backend/app /repo/backend/app
+COPY gateway /repo/gateway
 # 用仓库级 manifest 覆盖本地占位（避免人工维护第二份版本信息）。
 COPY skills/manifest.json ./src/data/skills-manifest.json
 # 放入构建好的 Skill zip。
@@ -26,7 +32,7 @@ RUN npm run build
 
 # 阶段 3：nginx 纯静态托管（不含反代）。
 FROM nginx:alpine AS runtime
-COPY --from=site-builder /app/dist /usr/share/nginx/html
+COPY --from=site-builder /repo/frontend/dist /usr/share/nginx/html
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

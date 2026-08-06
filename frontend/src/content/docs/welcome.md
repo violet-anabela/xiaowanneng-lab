@@ -1,15 +1,16 @@
 ---
 title: 欢迎
 description: 小完能实验室文档系统示例
+order: 1
 ---
 
 # 欢迎
 
-这是文档系统的一篇示例。你可以直接在 `site/src/content/docs/` 写 Markdown，提交后随站点自动上线。
+这是文档系统的一篇示例。你可以直接在 `frontend/src/content/docs/` 写 Markdown，提交后随站点自动上线。
 
 ## 怎么写一篇新文档
 
-1. 在 `site/src/content/docs/` 新建一个 `.md` 文件，带 frontmatter：
+1. 在 `frontend/src/content/docs/` 新建一个 `.md` 文件，带 frontmatter：
    ```md
    ---
    title: 你的标题

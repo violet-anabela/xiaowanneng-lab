@@ -28,7 +28,7 @@ server {
         rewrite ^/api/(.*)$ /$1 break;
         proxy_pass $backend_upstream;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -41,19 +41,20 @@ server {
     location = /livez {
         rewrite ^ /livez break;
         proxy_pass $backend_upstream;
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
     }
     location = /readyz {
         rewrite ^ /readyz break;
         proxy_pass $backend_upstream;
-        proxy_set_header Host $host;
+        proxy_set_header Host $http_host;
     }
 
     # ===== 其余请求：反代到前端静态站 =====
     location / {
         proxy_pass $frontend_upstream;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
+        # 保留浏览器请求中的原始 Host（包括使用非默认端口时的端口号）。
+        proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;

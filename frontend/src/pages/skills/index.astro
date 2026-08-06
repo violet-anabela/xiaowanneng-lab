@@ -2,30 +2,146 @@
 import Base from '../../layouts/Base.astro';
 import manifest from '../../data/skills-manifest.json';
 
-const list = Object.entries(manifest.skills).map(([slug, m]) => ({ slug, ...m }));
+const list = Object.entries(manifest.skills).map(([slug, meta]) => ({ slug, ...meta }));
 ---
 
-<Base title="Skills">
-  <h1>Skills</h1>
-  <p class="muted">
-    可下载、安装到兼容 Agent（如 WorkBuddy）的技能包。版本与网站使用的核心源码同源。
-  </p>
+<Base title="Agent Skills · 小完能实验室" description="补给站：可下载、可安装、源码同源的 Agent Skills。">
+  <header class="page-heading">
+    <p class="eyebrow">Supply station · capability packs</p>
+    <h1>把本领打包，<br /><span class="hl">送给同路人</span></h1>
+    <p>下载、解压、安装。适用于支持 Skill 规范的 Agent，版本与网站实际使用的核心源码保持同源。</p>
+  </header>
 
-  <div class="card-grid" style="margin-top:20px;">
-    {list.map((s) => (
-      <div class="card">
-        <h3>{s.title}</h3>
-        <p>版本 <code>{s.version}</code></p>
-        <p style="margin-top:10px;">
-          <a href={`/skills/${s.slug}.zip`}>下载 zip</a>
-          {' · '}
-          <a href={`/skills/${s.slug}-v${s.version}.zip`}>版本化下载</a>
-        </p>
-      </div>
+  <div class="supply-list">
+    {list.map((skill, index) => (
+      <article class="supply-card">
+        <div class="supply-label" aria-hidden="true">
+          <span class="pack-no">PACK {String(index + 1).padStart(2, '0')}</span>
+          <strong>SK</strong>
+          <span class="pack-ver">v{skill.version}</span>
+          <i class="string" ></i>
+        </div>
+        <div class="supply-content">
+          <div class="supply-meta">
+            <span class="status-pill">READY TO INSTALL</span>
+            <code>v{skill.version}</code>
+          </div>
+          <h2>{skill.title}</h2>
+          <p>独立的说明、依赖清单与调用入口已经包含在压缩包内。</p>
+          <div class="supply-actions">
+            <a class="btn" href={`/skills/${skill.slug}.zip`}>下载最新版 ↓</a>
+            <a class="btn btn-secondary" href={`/skills/${skill.slug}-v${skill.version}.zip`}>
+              下载 v{skill.version}
+            </a>
+          </div>
+        </div>
+      </article>
     ))}
   </div>
 
-  <p class="muted" style="font-size:13px; margin-top:18px;">
-    安装方法见各 Skill 包内的 <code>SKILL.md</code>。下载解压后放入 Agent 的 skills 目录即可。
-  </p>
+  <section class="install-guide">
+    <div>
+      <p class="eyebrow">Three simple steps</p>
+      <h2>安装只需要三步</h2>
+    </div>
+    <ol>
+      <li><span>01</span><div><strong>下载</strong><p>选择最新版或指定版本压缩包。</p></div></li>
+      <li><span>02</span><div><strong>解压</strong><p>阅读包内的 SKILL.md 和依赖说明。</p></div></li>
+      <li><span>03</span><div><strong>安装</strong><p>放入 Agent 支持的 skills 目录并按说明调用。</p></div></li>
+    </ol>
+  </section>
+
+  <style>
+    .supply-list { display: grid; gap: 30px; }
+
+    .supply-card {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      box-shadow: 8px 8px 0 rgba(35, 50, 77, 0.14);
+    }
+
+    /* 行李签条 */
+    .supply-label {
+      position: relative;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 12px;
+      padding: 30px 20px;
+      border-right: 2px dashed var(--line);
+      background: repeating-linear-gradient(-45deg, transparent 0 10px, rgba(217, 161, 59, 0.08) 10px 20px), var(--paper);
+    }
+
+    .pack-no { color: var(--ink-soft); font: 700 9px/1 var(--font-mono); letter-spacing: .2em; }
+    .pack-ver { color: var(--ink-faint); font: 700 8.5px/1 var(--font-mono); letter-spacing: .12em; }
+
+    .supply-label strong {
+      width: 86px;
+      height: 86px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      color: var(--paper);
+      background: var(--red);
+      box-shadow: 4px 4px 0 rgba(35, 50, 77, 0.2);
+      font: 800 26px/1 var(--font-mono);
+      transform: rotate(-5deg);
+    }
+
+    .supply-label .string {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--paper);
+    }
+
+    .supply-content { padding: clamp(26px, 4.5vw, 44px); display: flex; flex-direction: column; justify-content: center; }
+    .supply-meta { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .supply-meta code { color: var(--ink-soft); font: 700 10px/1 var(--font-mono); }
+    .supply-content h2 { margin: 24px 0 10px; font-family: var(--font-serif); font-size: clamp(25px, 3.5vw, 34px); }
+    .supply-content > p { max-width: 560px; margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.85; }
+    .supply-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+
+    .install-guide {
+      margin-top: 76px;
+      padding-top: 36px;
+      display: grid;
+      grid-template-columns: .7fr 1.3fr;
+      gap: 50px;
+      border-top: 2px solid var(--ink);
+    }
+
+    .install-guide h2 { margin: 0; font-family: var(--font-serif); font-size: 28px; }
+    .install-guide ol { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; list-style: none; }
+    .install-guide li { display: flex; gap: 13px; padding: 0 18px; border-left: 2px dashed var(--line); }
+    .install-guide li > span {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--paper);
+      font: 700 11px/1 var(--font-mono);
+    }
+    .install-guide strong { font-family: var(--font-serif); font-size: 14.5px; }
+    .install-guide li p { margin: 5px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.7; }
+
+    @media (max-width: 760px) {
+      .supply-card { grid-template-columns: 1fr; }
+      .supply-label { border-right: 0; border-bottom: 2px dashed var(--line); padding: 26px; }
+      .install-guide { grid-template-columns: 1fr; gap: 26px; }
+      .install-guide ol { grid-template-columns: 1fr; gap: 22px; }
+      .install-guide li { padding: 0; border-left: 0; }
+    }
+  </style>
 </Base>

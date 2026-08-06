@@ -2,68 +2,278 @@
 import Base from '../../layouts/Base.astro';
 ---
 
-<Base title="图片去背景">
-  <a href="/tools">← 返回工具</a>
-  <h1>图片去背景</h1>
-  <p class="muted">
-    上传图片，去除背景并返回透明 PNG。图片仅用于本次处理；结果响应不缓存（<code>Cache-Control: no-store</code>）。
-  </p>
+<Base title="图片去背景 · 小完能实验室" description="上传图片，一键生成透明背景 PNG。">
+  <a class="back-link" href="/tools/"><span aria-hidden="true">←</span> 返回装备箱</a>
 
-  <div class="prose">
-    <input type="file" id="file" accept="image/png,image/jpeg,image/webp" />
-    <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
-      <button class="btn" id="run">去除背景</button>
-      <span id="status" class="muted"></span>
+  <header class="tool-heading">
+    <div>
+      <p class="eyebrow">Vision gear · server powered</p>
+      <h1>图片去背景</h1>
+      <p>上传一张图片，由模型识别主体并生成透明背景 PNG。</p>
     </div>
-    <div id="result" style="margin-top:18px;"></div>
-    <p class="muted" style="font-size:13px; margin-top:14px;">
-      说明：本工具调用后端推理服务。服务可能处于冷启动，首次请求稍慢，请耐心等待。
-      仅接受 JPEG / PNG / WebP，单文件 ≤ 10MB。
-    </p>
+    <span class="status-pill">GEAR READY</span>
+  </header>
+
+  <section class="tool-workspace">
+    <div class="workspace-bar">
+      <span>REMOVE BACKGROUND · GEAR 01</span>
+      <div><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="workspace-grid">
+      <div class="input-panel">
+        <div class="panel-label"><span>01</span> 选择原图</div>
+        <input type="file" id="file" accept="image/png,image/jpeg,image/webp" hidden />
+        <label class="dropzone" id="dropzone" for="file">
+          <span class="upload-glyph" aria-hidden="true"><i></i><i></i><i></i></span>
+          <strong id="file-name">拖放图片到这里</strong>
+          <span id="file-hint">或者点击选择 JPEG / PNG / WebP</span>
+          <span class="choose-file">选择图片</span>
+          <div id="source-preview" class="source-preview" aria-hidden="true"></div>
+        </label>
+
+        <div class="action-row">
+          <button class="btn" id="run" type="button">开始处理 <span aria-hidden="true">→</span></button>
+          <span id="status" class="process-status" aria-live="polite">等待图片</span>
+        </div>
+      </div>
+
+      <div class="output-panel">
+        <div class="panel-label"><span>02</span> 透明结果</div>
+        <div id="result" class="result-stage">
+          <div class="empty-result">
+            <span aria-hidden="true">✦</span>
+            <strong>处理结果会显示在这里</strong>
+            <p>透明区域使用棋盘格展示</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="tool-notes">
+    <div><span>◈</span><p><strong>不会留存</strong>图片仅用于本次推理，结果响应不缓存。</p></div>
+    <div><span>⌁</span><p><strong>文件限制</strong>支持 JPEG、PNG、WebP，单文件不超过 10MB。</p></div>
+    <div><span>◷</span><p><strong>首次稍慢</strong>模型冷启动时需要一点时间，请耐心等待。</p></div>
   </div>
 
   <script>
     const API = import.meta.env.PUBLIC_API_BASE_URL || '/api';
-    const fileInput = document.getElementById('file');
-    const runBtn = document.getElementById('run');
-    const statusEl = document.getElementById('status');
-    const resultEl = document.getElementById('result');
+    const fileInput = document.getElementById('file') as HTMLInputElement;
+    const runBtn = document.getElementById('run') as HTMLButtonElement;
+    const statusEl = document.getElementById('status') as HTMLSpanElement;
+    const resultEl = document.getElementById('result') as HTMLDivElement;
+    const dropzone = document.getElementById('dropzone') as HTMLLabelElement;
+    const fileName = document.getElementById('file-name') as HTMLSpanElement;
+    const fileHint = document.getElementById('file-hint') as HTMLSpanElement;
+    const sourcePreview = document.getElementById('source-preview') as HTMLDivElement;
+
+    let selectedFile: File | undefined;
+    let sourceUrl: string | undefined;
+    let resultUrl: string | undefined;
+
+    const showFile = (file: File) => {
+      selectedFile = file;
+      if (sourceUrl) URL.revokeObjectURL(sourceUrl);
+      sourceUrl = URL.createObjectURL(file);
+      sourcePreview.style.backgroundImage = `url("${sourceUrl}")`;
+      sourcePreview.classList.add('visible');
+      fileName.textContent = file.name;
+      fileHint.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB · 点击可重新选择`;
+      statusEl.textContent = '图片已就绪';
+      statusEl.dataset.state = 'ready';
+    };
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (file) showFile(file);
+    });
+
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropzone.classList.add('dragging');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropzone.classList.remove('dragging');
+      });
+    });
+
+    dropzone.addEventListener('drop', (event) => {
+      const file = event.dataTransfer?.files?.[0];
+      if (file) showFile(file);
+    });
 
     runBtn.addEventListener('click', async () => {
-      const file = fileInput.files?.[0];
-      if (!file) { statusEl.textContent = '请先选择图片'; return; }
-      statusEl.textContent = '处理中…';
-      resultEl.innerHTML = '';
+      if (!selectedFile) {
+        statusEl.textContent = '请先选择图片';
+        statusEl.dataset.state = 'error';
+        return;
+      }
+
+      statusEl.textContent = '模型处理中…';
+      statusEl.dataset.state = 'running';
       runBtn.disabled = true;
+
       try {
-        const fd = new FormData();
-        fd.append('file', file);
-        const res = await fetch(`${API}/v1/remove-background`, { method: 'POST', body: fd });
-        if (!res.ok) {
-          const msg = await res.text();
-          statusEl.textContent = `失败 (${res.status})：${msg}`;
+        const form = new FormData();
+        form.append('file', selectedFile);
+        const response = await fetch(`${API}/v1/remove-background`, { method: 'POST', body: form });
+
+        if (!response.ok) {
+          const message = await response.text();
+          statusEl.textContent = `处理失败 (${response.status})`;
+          statusEl.dataset.state = 'error';
+          console.error(message);
           return;
         }
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const img = document.createElement('img');
-        img.src = url;
-        img.style.maxWidth = '100%';
-        img.style.border = '1px solid #e5e7eb';
-        img.style.borderRadius = '8px';
-        img.style.background = 'repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 16px 16px';
-        const a = document.createElement('a');
-        a.href = url; a.download = 'remove-background.png'; a.className = 'btn';
-        a.textContent = '下载 PNG';
-        resultEl.appendChild(img);
-        resultEl.appendChild(document.createElement('br'));
-        resultEl.appendChild(a);
-        statusEl.textContent = '完成';
-      } catch (e) {
-        statusEl.textContent = `错误：${e.message}`;
+
+        if (resultUrl) URL.revokeObjectURL(resultUrl);
+        resultUrl = URL.createObjectURL(await response.blob());
+        resultEl.replaceChildren();
+
+        const image = document.createElement('img');
+        image.src = resultUrl;
+        image.alt = '去除背景后的透明 PNG';
+
+        const download = document.createElement('a');
+        download.href = resultUrl;
+        download.download = 'remove-background.png';
+        download.className = 'btn result-download';
+        download.textContent = '下载透明 PNG ↓';
+
+        resultEl.append(image, download);
+        resultEl.classList.add('has-result');
+        statusEl.textContent = '处理完成';
+        statusEl.dataset.state = 'ready';
+      } catch (error) {
+        statusEl.textContent = '连接后端失败';
+        statusEl.dataset.state = 'error';
+        console.error(error);
       } finally {
         runBtn.disabled = false;
       }
     });
   </script>
+
+  <style>
+    .tool-heading {
+      margin-bottom: 38px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 28px;
+    }
+
+    .tool-heading h1 { margin: 0; font-family: var(--font-serif); font-size: clamp(36px, 5.5vw, 58px); line-height: 1.12; }
+    .tool-heading p:not(.eyebrow) { margin: 16px 0 0; color: var(--ink-soft); }
+    .tool-heading .status-pill { transform: rotate(4deg); }
+
+    .tool-workspace {
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      box-shadow: 8px 8px 0 rgba(35, 50, 77, 0.14);
+    }
+
+    .workspace-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 22px;
+      color: var(--ink-soft);
+      border-bottom: 2px solid var(--ink);
+      background: repeating-linear-gradient(-45deg, transparent 0 8px, rgba(35, 50, 77, 0.04) 8px 16px);
+      font: 700 9px/1 var(--font-mono);
+      letter-spacing: .16em;
+    }
+
+    .workspace-bar div { display: flex; gap: 6px; }
+    .workspace-bar i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink); background: transparent; }
+    .workspace-bar i:first-child { background: var(--teal); }
+
+    .workspace-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    .input-panel, .output-panel { min-width: 0; padding: 26px; }
+    .input-panel { border-right: 2px dashed var(--line); }
+    .panel-label { margin-bottom: 16px; color: var(--ink); font-size: 13px; font-weight: 700; font-family: var(--font-serif); }
+    .panel-label span { margin-right: 8px; color: var(--red); font: 700 10px/1 var(--font-mono); }
+
+    .dropzone,
+    .result-stage {
+      position: relative;
+      min-height: 390px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 2px dashed var(--ink-faint);
+      border-radius: var(--radius-sm);
+      background:
+        linear-gradient(45deg, rgba(35,50,77,.03) 25%, transparent 25%, transparent 75%, rgba(35,50,77,.03) 75%),
+        linear-gradient(45deg, rgba(35,50,77,.03) 25%, transparent 25%, transparent 75%, rgba(35,50,77,.03) 75%),
+        var(--paper);
+      background-position: 0 0, 10px 10px;
+      background-size: 20px 20px;
+    }
+
+    .dropzone { cursor: pointer; transition: border-color 180ms ease, background 180ms ease; }
+    .dropzone:hover, .dropzone.dragging { border-color: var(--red); background-color: rgba(217, 79, 48, .045); }
+    .dropzone > *:not(.source-preview) { position: relative; z-index: 2; }
+    .upload-glyph { position: relative; width: 66px; height: 66px; margin-bottom: 20px; display: grid; place-items: center; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--card); transform: rotate(-3deg); }
+    .upload-glyph i { position: absolute; display: block; background: var(--ink); }
+    .upload-glyph i:nth-child(1) { width: 2px; height: 25px; }
+    .upload-glyph i:nth-child(2) { width: 13px; height: 2px; transform: translate(-4px, -8px) rotate(-40deg); }
+    .upload-glyph i:nth-child(3) { width: 13px; height: 2px; transform: translate(4px, -8px) rotate(40deg); }
+    .dropzone strong { max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-family: var(--font-serif); }
+    .dropzone > span:not(.upload-glyph):not(.choose-file) { margin-top: 7px; color: var(--ink-soft); font-size: 12px; }
+    .choose-file { margin-top: 18px; padding: 9px 14px; border: 2px solid var(--ink); border-radius: var(--radius); color: var(--ink); background: var(--card); font-size: 12px; font-weight: 700; box-shadow: 3px 3px 0 rgba(35,50,77,.16); }
+
+    .source-preview { position: absolute; inset: 0; z-index: 1; opacity: 0; background-position: center; background-size: cover; transition: opacity 180ms ease; }
+    .source-preview::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(245,239,226,.15), rgba(245,239,226,.85)); }
+    .source-preview.visible { opacity: .55; }
+
+    .action-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; }
+    .process-status { color: var(--ink-soft); font-size: 12.5px; }
+    .process-status::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: var(--ink-faint); }
+    .process-status[data-state="ready"] { color: var(--teal); }
+    .process-status[data-state="ready"]::before { background: var(--teal); }
+    .process-status[data-state="running"] { color: var(--gold); }
+    .process-status[data-state="running"]::before { background: var(--gold); animation: pulse 1s infinite; }
+    .process-status[data-state="error"] { color: var(--red); }
+    .process-status[data-state="error"]::before { background: var(--red); }
+
+    .result-stage { border-style: solid; border-color: var(--line); }
+    .empty-result span { display: block; color: var(--gold); font-size: 30px; }
+    .empty-result strong { display: block; margin-top: 18px; font-size: 15px; font-family: var(--font-serif); }
+    .empty-result p { margin: 6px 0 0; color: var(--ink-soft); font-size: 11.5px; }
+    .result-stage.has-result { padding: 18px; justify-content: flex-start; gap: 16px; }
+    .result-stage :global(img) { width: 100%; min-height: 285px; max-height: 320px; object-fit: contain; border-radius: var(--radius-sm); }
+    .result-stage :global(.result-download) { width: 100%; flex: 0 0 auto; }
+
+    .tool-notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+    .tool-notes > div { padding: 16px 18px; display: flex; gap: 12px; border: 2px dashed var(--line); border-radius: var(--radius-sm); }
+    .tool-notes span { color: var(--red); }
+    .tool-notes p { margin: 0; color: var(--ink-soft); font-size: 11.5px; line-height: 1.7; }
+    .tool-notes strong { display: block; margin-bottom: 2px; color: var(--ink); font-size: 12.5px; }
+
+    @media (max-width: 860px) {
+      .workspace-grid { grid-template-columns: 1fr; }
+      .input-panel { border-right: 0; border-bottom: 2px dashed var(--line); }
+      .tool-notes { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 620px) {
+      .tool-heading { align-items: flex-start; flex-direction: column; }
+      .dropzone, .result-stage { min-height: 320px; }
+      .input-panel, .output-panel { padding: 18px; }
+      .action-row { align-items: stretch; flex-direction: column; }
+    }
+  </style>
 </Base>

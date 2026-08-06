@@ -1,23 +1,147 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { tools } from '../../data/tools';
+
+const toolMeta = {
+  'remove-background': { icon: '切', code: 'GEAR 01' },
+  'json-formatter': { icon: '{}', code: 'GEAR 02' },
+  base64: { icon: '64', code: 'GEAR 03' },
+};
 ---
 
-<Base title="工具">
-  <h1>工具</h1>
-  <p class="muted">
-    小工具集合。纯前端工具在浏览器内运行、零上传；需算力的工具由后端服务支撑。
-  </p>
-  <div class="card-grid" style="margin-top:20px;">
-    {tools.map((t) => (
-      <a class="card" href={t.status === 'available' ? `/tools/${t.slug}` : '#'}>
-        <h3>{t.title}</h3>
-        <p>{t.description}</p>
-        <span class="tag">
-          {t.needsBackend ? '需后端' : '纯前端'}
-          {t.status === 'coming-soon' ? ' · 敬请期待' : ''}
-        </span>
-      </a>
-    ))}
+<Base title="工具箱 · 小完能实验室" description="远征装备：轻量、直接、尊重数据边界的在线工具。">
+  <header class="page-heading">
+    <p class="eyebrow">Expedition gear · utilities</p>
+    <h1>小而有用的<br /><span class="hl">远征装备</span></h1>
+    <p>能在浏览器完成的就留在浏览器；真正需要算力的，再交给后端服务。</p>
+  </header>
+
+  <div class="gear-grid">
+    {tools.map((tool) => {
+      const meta = toolMeta[tool.slug as keyof typeof toolMeta];
+      const available = tool.status === 'available';
+      const content = (
+        <>
+          <span class="gear-code">{meta.code}</span>
+          <span class:list={['gear-stamp', { packing: !available }]}>
+            {available ? 'READY' : 'PACKING'}
+          </span>
+          <div class="gear-icon">{meta.icon}</div>
+          <h2>{tool.title}</h2>
+          <p>{tool.description}</p>
+          <div class="gear-footer">
+            <span class:list={['tag', { offline: !available }]}>
+              {available ? (tool.needsBackend ? '云端算力' : '浏览器本地') : '正在打包'}
+            </span>
+            <span class="gear-action">{available ? '立即使用 →' : 'COMING SOON'}</span>
+          </div>
+        </>
+      );
+
+      return available ? (
+        <a class="card gear-card" href={`/tools/${tool.slug}`}>{content}</a>
+      ) : (
+        <article class="card gear-card disabled" aria-label={`${tool.title}，正在制作`}>{content}</article>
+      );
+    })}
   </div>
+
+  <aside class="privacy-memo">
+    <span class="pin" aria-hidden="true"></span>
+    <strong>数据边界写在装备上</strong>
+    <p>每件装备都会明确说明数据在浏览器处理，还是需要发送到本站后端。</p>
+  </aside>
+
+  <style>
+    .gear-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 26px;
+    }
+
+    .gear-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 300px;
+      padding: 28px;
+    }
+
+    .gear-card.disabled { box-shadow: none; border-style: dashed; opacity: 0.72; }
+
+    .gear-code {
+      position: absolute;
+      top: -13px;
+      left: 20px;
+      padding: 5px 10px;
+      color: var(--paper);
+      background: var(--ink);
+      font: 800 10px/1 var(--font-mono);
+      letter-spacing: 0.15em;
+      transform: rotate(-2deg);
+    }
+
+    .gear-stamp {
+      position: absolute;
+      top: 20px;
+      right: 18px;
+      padding: 6px 10px;
+      border: 2px solid var(--teal);
+      border-radius: var(--radius);
+      color: var(--teal);
+      font: 800 9px/1 var(--font-mono);
+      letter-spacing: 0.18em;
+      transform: rotate(6deg);
+      opacity: 0.85;
+    }
+    .gear-stamp.packing { color: var(--ink-faint); border-color: var(--ink-faint); border-style: dashed; }
+
+    .gear-icon {
+      width: 60px;
+      height: 60px;
+      margin: 18px 0 22px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--paper);
+      font: 800 20px/1 var(--font-mono);
+      transform: rotate(-4deg);
+      transition: transform 200ms ease;
+    }
+    a.gear-card:hover .gear-icon { transform: rotate(0deg) scale(1.06); }
+
+    .gear-card h2 { margin: 0 0 10px; font-family: var(--font-serif); font-size: 22px; }
+    .gear-card > p { flex: 1; margin: 0; color: var(--ink-soft); font-size: 13.5px; line-height: 1.85; max-width: 480px; }
+    .gear-footer { margin-top: 26px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .gear-action { color: var(--red); font-weight: 700; font-size: 12.5px; }
+    .gear-card.disabled .gear-action { color: var(--ink-faint); font: 700 10px/1.4 var(--font-mono); letter-spacing: 0.1em; }
+
+    .privacy-memo {
+      position: relative;
+      width: min(430px, 100%);
+      margin: 44px auto 0;
+      padding: 22px 24px 20px;
+      background: #fff9c9;
+      box-shadow: 0 12px 26px rgba(35, 50, 77, 0.16);
+      transform: rotate(-1.2deg);
+    }
+    .pin {
+      position: absolute;
+      top: -9px;
+      left: 50%;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--red);
+      transform: translateX(-50%);
+    }
+    .privacy-memo strong { display: block; font-family: var(--font-hand); font-size: 17px; color: #5c4f14; }
+    .privacy-memo p { margin: 6px 0 0; font-family: var(--font-hand); font-size: 14px; line-height: 1.8; color: #6b5d1e; }
+
+    @media (max-width: 760px) {
+      .gear-grid { grid-template-columns: 1fr; }
+      .gear-card { min-height: 0; }
+    }
+  </style>
 </Base>

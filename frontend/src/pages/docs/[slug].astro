@@ -13,14 +13,44 @@ const { slug } = Astro.params;
 const entry = Object.entries(modules).find(
   ([path]) => path.split('/').pop().replace(/\.md$/, '') === slug
 );
-if (!entry) return Astro.redirect('/docs');
+if (!entry) return Astro.redirect('/docs/');
 const mod = entry[1];
 const { Content } = mod;
 ---
 
 <Base title={mod.frontmatter?.title ?? slug}>
-  <a href="/docs">← 返回文档</a>
-  <article class="prose" style="margin-top:16px;">
-    <Content />
-  </article>
+  <a class="back-link" href="/docs/"><span aria-hidden="true">←</span> 返回考察记录</a>
+  <div class="doc-sheet">
+    <span class="doc-stamp" aria-hidden="true">FIELD<br />NOTE</span>
+    <article class="prose doc-article">
+      <Content />
+    </article>
+  </div>
+
+  <style>
+    .doc-sheet { position: relative; max-width: 850px; margin: 0 auto; }
+    .doc-stamp {
+      position: absolute;
+      top: -22px;
+      right: -14px;
+      z-index: 1;
+      width: 78px;
+      height: 78px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 3px double var(--teal);
+      border-radius: 50%;
+      color: var(--teal);
+      background: rgba(255, 253, 247, 0.7);
+      font: 800 10px/1.4 var(--font-mono);
+      letter-spacing: 0.14em;
+      transform: rotate(12deg);
+      opacity: 0.85;
+    }
+
+    @media (max-width: 620px) {
+      .doc-stamp { top: -18px; right: 0; width: 64px; height: 64px; font-size: 8.5px; }
+    }
+  </style>
 </Base>

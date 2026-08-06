@@ -1,11 +1,11 @@
 # 本地编排（开发用，非 Zeabur 部署方式）。
 # 三个服务各自一个目录、自带 Dockerfile，与 quant-strategy-lab 结构一致：
-#   backend  —— FastAPI 推理服务（:8000）
-#   frontend —— Astro 静态站（nginx :80，纯静态）
-#   gateway  —— 网关，反代 /api -> backend、/ -> frontend（:8080 对外）
+#   backend  —— FastAPI 推理服务（容器 :8000，本机 :18000）
+#   frontend —— Astro 静态站（容器 :80，本机 :18081，仅供直连调试）
+#   gateway  —— 网关，反代 /api -> backend、/ -> frontend（容器 :80，本机 :18080）
 #
 # 启动：docker compose up --build
-# 访问：http://localhost:8080
+# 访问：http://localhost:18080
 #
 # 注意：backend 在构建期下载 u2net 模型（需网络，约百 MB）；无网络时后端镜像构建会失败。
 services:
@@ -16,7 +16,7 @@ services:
     environment:
       PORT: 8000
     ports:
-      - "8000:8000"
+      - "18000:8000"
     restart: unless-stopped
 
   frontend:
@@ -25,6 +25,8 @@ services:
       dockerfile: frontend/Dockerfile
     depends_on:
       - backend
+    ports:
+      - "18081:80"
     restart: unless-stopped
 
   gateway:
@@ -36,7 +38,7 @@ services:
       BACKEND_URL: http://backend:8000
       FRONTEND_URL: http://frontend:80
     ports:
-      - "8080:80"
+      - "18080:80"
     depends_on:
       - backend
       - frontend

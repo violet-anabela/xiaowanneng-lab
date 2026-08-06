@@ -1,26 +1,103 @@
 ---
 import Base from '../../layouts/Base.astro';
-const modules = import.meta.glob('../content/docs/*.md', { eager: true });
-const docs = Object.entries(modules).map(([path, mod]) => {
-  const slug = path.split('/').pop().replace(/\.md$/, '');
-  return {
-    slug,
-    title: mod.frontmatter?.title ?? slug,
-    description: mod.frontmatter?.description ?? '',
-    url: `/docs/${slug}`,
-  };
-});
+
+const modules = import.meta.glob('../../content/docs/*.md', { eager: true });
+const docs = Object.entries(modules)
+  .map(([path, mod]) => {
+    const slug = path.split('/').pop().replace(/\.md$/, '');
+    return {
+      slug,
+      title: mod.frontmatter?.title ?? slug,
+      description: mod.frontmatter?.description ?? '',
+      order: Number(mod.frontmatter?.order ?? 999),
+      url: `/docs/${slug}/`,
+    };
+  })
+  .sort((a, b) => a.order - b.order);
 ---
 
-<Base title="文档">
-  <h1>文档</h1>
-  <p class="muted">我写的笔记与复盘。纯 Markdown 存于 Git，重建即恢复。</p>
-  <div class="card-grid" style="margin-top:20px;">
-    {docs.map((d) => (
-      <a class="card" href={d.url}>
-        <h3>{d.title}</h3>
-        <p>{d.description}</p>
+<Base title="文档 · 小完能实验室" description="考察记录：文章、笔记、复盘与过程记录。">
+  <header class="page-heading">
+    <p class="eyebrow">Field notes · logbook</p>
+    <h1>记录我的思考，<br /><span class="hl">收藏走过的路</span></h1>
+    <p>这里放我的文章、笔记、项目复盘和想长期保存的内容。它们属于我，而不只是某个项目的使用说明。</p>
+  </header>
+
+  <div class="logbook">
+    <div class="logbook-head">
+      <span class="log-count">共 {String(docs.length).padStart(2, '0')} 篇考察记录</span>
+      <span class="log-label">EXPEDITION LOGBOOK</span>
+    </div>
+    {docs.map((doc, index) => (
+      <a class="log-entry" href={doc.url}>
+        <span class="log-no"><b>{String(index + 1).padStart(2, '0')}</b><i>LOG</i></span>
+        <div class="log-body">
+          <h2>{doc.title}</h2>
+          <p>{doc.description || '一篇来自考察途中的记录。'}</p>
+        </div>
+        <span class="log-go" aria-hidden="true">→</span>
       </a>
     ))}
   </div>
+
+  <style>
+    .logbook {
+      border: 2px solid var(--ink);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      box-shadow: 8px 8px 0 rgba(35, 50, 77, 0.14);
+      overflow: hidden;
+    }
+
+    .logbook-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 24px;
+      border-bottom: 2px solid var(--ink);
+      background: repeating-linear-gradient(-45deg, transparent 0 8px, rgba(35, 50, 77, 0.04) 8px 16px);
+    }
+    .log-count { font-family: var(--font-serif); font-weight: 700; font-size: 15px; }
+    .log-label { color: var(--ink-faint); font: 700 9px/1.4 var(--font-mono); letter-spacing: 0.22em; }
+
+    .log-entry {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      align-items: center;
+      gap: 20px;
+      padding: 24px;
+      border-bottom: 1px dashed var(--line);
+      transition: background 150ms ease;
+    }
+    .log-entry:last-child { border-bottom: 0; }
+    .log-entry:hover { background: rgba(217, 79, 48, 0.045); }
+
+    .log-no {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--paper);
+      transform: rotate(-4deg);
+      transition: transform 180ms ease;
+    }
+    .log-no b { font: 700 15px/1 var(--font-mono); }
+    .log-no i { margin-top: 2px; font: 700 6.5px/1 var(--font-mono); letter-spacing: 0.2em; color: var(--ink-faint); font-style: normal; }
+    .log-entry:hover .log-no { transform: rotate(0deg) scale(1.05); }
+
+    .log-body h2 { margin: 0; font-family: var(--font-serif); font-size: 19px; line-height: 1.4; }
+    .log-body p { margin: 6px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.75; }
+
+    .log-go { color: var(--ink-faint); font-size: 18px; transition: color 150ms ease, transform 150ms ease; }
+    .log-entry:hover .log-go { color: var(--red); transform: translateX(4px); }
+
+    @media (max-width: 620px) {
+      .log-entry { grid-template-columns: 44px 1fr auto; padding: 18px 16px; gap: 14px; }
+      .log-no { width: 44px; height: 44px; }
+      .logbook-head { padding: 13px 16px; }
+    }
+  </style>
 </Base>

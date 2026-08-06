@@ -7,7 +7,7 @@
 - zip 内固定包含一个顶层目录 <slug>/，避免解压散落。
 - 排除：__pycache__ / *.pyc / .venv / 模型权重(*.onnx) / 密钥 / 系统隐藏文件。
 - 模型权重默认**不**打进 zip（许可证与体积），由下载者首次使用时按需下载。
-- 输出目录默认 site/public/skills/（随站托管下载）。
+- 输出目录默认 frontend/public/skills/（随站托管下载）。
 
 本地预览与 Docker 构建都调用同一个脚本，保证产物一致。
 """
@@ -89,8 +89,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Package skills into downloadable zips.")
     ap.add_argument(
         "--output",
-        default=str(ROOT / "site" / "public" / "skills"),
-        help="输出目录（默认 site/public/skills）",
+        default=str(ROOT / "frontend" / "public" / "skills"),
+        help="输出目录（默认 frontend/public/skills）",
     )
     ap.add_argument(
         "--manifest",

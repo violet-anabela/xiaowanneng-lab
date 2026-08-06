@@ -1,6 +1,6 @@
 # xiaowanneng-lab
 
-小完能实验室 —— 个人文档 + 小工具 + 可下载 WorkBuddy Skill 的静态站点。
+小完能实验室 —— 个人文档 + 小工具 + 可下载 Agent Skill 的静态站点。
 
 ## 这个仓库是什么
 
@@ -8,7 +8,7 @@
 
 - **文档**：用 Markdown 写，存 Git，跟着镜像一起重生（容器重启不丢）。
 - **小工具**：纯前端的工具（JSON 格式化、Base64 等）零成本跑在浏览器里；需算力的工具（如抠图）走后端服务。
-- **Skills 画廊**：把自己的 WorkBuddy Skill 打包成 zip，访客可直接下载装回自己的 WorkBuddy。
+- **Skills 画廊**：把兼容 Agent Skills 规范的 Skill 打包成 zip，访客可下载后交给支持该规范的 Agent 使用。
 
 架构宪法（详见 `proposals/`，不进 git）：
 
@@ -21,7 +21,9 @@
 
 ```
 frontend/                 前端 Astro 静态站（纯静态，由网关反代访问）
-  src/pages/              首页 / docs / tools / skills
+  src/pages/              首页 / docs / development / tools / skills
+  src/content/docs/       个人文章、笔记与内容
+  src/content/development/ frontend/backend/gateway 项目开发文档
   src/data/tools.ts       工具清单（新增纯前端工具只改这里）
   public/skills/          构建期生成的 Skill zip（可下载）
   src/data/skills-manifest.json  从 skills/manifest.json 覆盖而来
@@ -56,7 +58,9 @@ npm run dev          # 本地预览，默认 http://localhost:4321
 npm run build        # 输出 dist/
 ```
 
-抠图页通过 `import.meta.env.PUBLIC_API_BASE_URL` 找后端；本地未设置时默认相对路径 `/api`，需经下方网关访问（或 `PUBLIC_API_BASE_URL=http://localhost:8000 npm run dev` 直连后端）。
+抠图页通过 `import.meta.env.PUBLIC_API_BASE_URL` 找后端；本地未设置时默认相对路径 `/api`，需经下方网关访问（或在直接运行 Backend 源码时用 `PUBLIC_API_BASE_URL=http://localhost:8000 npm run dev` 直连）。
+
+`npm run build` 会先执行开发文档契约检查，核对三个服务的端口、Backend 路由与环境变量、Gateway 路由和变量。代码变了但文档没更新时，构建会列出缺失内容。
 
 ### 后端
 
@@ -77,10 +81,12 @@ curl http://127.0.0.1:8000/readyz
 
 ```bash
 docker compose up --build
-# 访问 http://localhost:8080 （网关）-> 前端静态站 + /api 反代到后端
+# 访问 http://localhost:18080 （网关）-> 前端静态站 + /api 反代到后端
 ```
 
 > 后端在构建期下载 u2net 模型（需网络，约百 MB）；无网络时后端镜像构建会失败。
+>
+> 本地调试端口：gateway `18080`、backend `18000`、frontend `18081`。容器内部仍使用 `80/8000`，Zeabur 配置不受影响。
 
 ### 打包 Skill（生成下载用 zip）
 
@@ -114,7 +120,7 @@ GitHub 推送 `main` 自动部署。仓库根需有 `backend/Dockerfile`、`fron
    - `BACKEND_URL` = `http://backend.zeabur.internal:8000`（或 backend 服务的实际内部地址）
    - `FRONTEND_URL` = `http://frontend.zeabur.internal:80`（或 frontend 服务的实际内部地址）
    - 网关会把 `本站域名/api/v1/remove-background` 转成 `BACKEND_URL/v1/remove-background` 发给后端。
-3. `backend` 服务可选设 `MAX_REQUEST_MB` / `MAX_FILE_MB` / `MAX_PIXELS` / `MODEL_NAME`（见 `backend/app/settings.py`）。
+3. `backend` 服务可选设 `MAX_REQUEST_BYTES` / `MAX_FILE_BYTES` / `MAX_PIXELS` / `MAX_UPLOAD_CONCURRENCY` / `MAX_INFERENCE_CONCURRENCY` / `ALLOWED_ORIGINS` / `MODEL_NAME`（见 `backend/app/settings.py`）。
 
 前端默认走相对路径 `/api`（无需任何构建变量）；只有当你想强制指定后端时才设 `PUBLIC_API_BASE_URL` 覆盖。因为走网关同源反代，**无需 CORS**。
 
