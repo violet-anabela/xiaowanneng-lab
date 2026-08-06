@@ -32,5 +32,6 @@ COPY skills/remove-background/remove_background_skill /app/remove_background_ski
 COPY backend/ /app/
 
 EXPOSE 8000
-# exec-form 不会展开 ${PORT}，用 shell exec（方案 §11.3）。直接跑 .venv 内程序，避免 uv run 再同步。
-CMD ["sh", "-c", "exec /app/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\""]
+# venv 从构建阶段的 /repo/.venv 复制到 /app/.venv 后，console script 的 shebang 仍会指向旧路径；
+# 直接用 venv 的 Python 以模块方式启动，避免依赖不可迁移的 /app/.venv/bin/uvicorn 脚本。
+CMD ["sh", "-c", "exec /app/.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\""]

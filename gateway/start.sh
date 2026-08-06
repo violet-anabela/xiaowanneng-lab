@@ -4,8 +4,7 @@
 set -e
 
 PORT="${PORT:-80}"
-# 本地未设置时给占位（compose 用 nginx.local.conf，不走本脚本的 envsubst 路径）；
-# Zeabur 上由用户在 gateway 服务环境变量里填 backend/frontend 的内部地址覆盖。
+# 默认值对应本地 compose 服务名；Zeabur 上由 gateway 服务环境变量里的实际内部地址覆盖。
 BACKEND_URL="${BACKEND_URL:-http://backend:8000}"
 FRONTEND_URL="${FRONTEND_URL:-http://frontend:80}"
 

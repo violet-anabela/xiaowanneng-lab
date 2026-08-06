@@ -26,18 +26,18 @@ frontend/                 前端 Astro 静态站（纯静态，由网关反代�
   public/skills/          构建期生成的 Skill zip（可下载）
   src/data/skills-manifest.json  从 skills/manifest.json 覆盖而来
   nginx.conf              前端容器内纯静态托管配置（不含反代）
-  Dockerfile              Zeabur 按服务名 `frontend` 匹配
+  Dockerfile              Zeabur 用 `ZBPACK_DOCKERFILE_PATH=frontend/Dockerfile` 指定
 backend/                  后端 FastAPI（只服务需算力的工具）
   app/main.py             /livez /readyz /v1/remove-background
   app/middleware.py       ASGI 请求级大小限制（防上传 DoS）
   app/adapters/           纯适配层，调用 Skill 核心
   pyproject.toml/uv.lock  后端 + 核心依赖（python，uv 管理）
-  Dockerfile              Zeabur 按服务名 `backend` 匹配
+  Dockerfile              Zeabur 用 `ZBPACK_DOCKERFILE_PATH=backend/Dockerfile` 指定
 gateway/                  网关（反向代理）服务
   nginx.conf.template     配置模板（envsubst 注入 PORT/BACKEND_URL/FRONTEND_URL）
-  nginx.local.conf        本地 docker-compose 用（写死 compose 服务名）
+  nginx.local.conf        备用本地调试配置（当前 compose 不使用）
   start.sh                启动时 envsubst 注入变量后拉起 nginx
-  Dockerfile              Zeabur 按服务名 `gateway` 匹配
+  Dockerfile              Zeabur 用 `ZBPACK_DOCKERFILE_PATH=gateway/Dockerfile` 指定
 skills/                   可下载 Skill（唯一真源）
   remove-background/      ← 核心包 remove_background_skill/ + CLI + SKILL.md
   manifest.json           版本清单（下载页与打包脚本共读）
