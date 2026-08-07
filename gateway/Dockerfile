@@ -1,11 +1,11 @@
 # 网关（反向代理）服务构建。
-# 构建上下文 = gateway/ 目录（自包含）：
-#   - 本地 compose：build.context 指向 ./gateway
-#   - Zeabur：服务 Root Directory 必须设为 gateway，zbpack 才会找到并使用本 Dockerfile；
-#     否则 zbpack 会退回自动检测，生成自带 ${WEB_PORT} 模板的静态站镜像（启动即崩）。
+# 构建上下文 = 仓库根目录，与 backend/frontend 的约定一致：
+#   - 本地 compose：build.context = .，dockerfile = gateway/Dockerfile
+#   - Zeabur：Root Directory 留空 + 服务环境变量 ZBPACK_DOCKERFILE_PATH=gateway/Dockerfile
+#     （三个服务统一用 ZBPACK_DOCKERFILE_PATH 指定各自的 Dockerfile）
 FROM nginx:alpine
-COPY nginx.conf.template /etc/nginx/nginx.conf.template
-COPY start.sh /start.sh
+COPY gateway/nginx.conf.template /etc/nginx/nginx.conf.template
+COPY gateway/start.sh /start.sh
 RUN chmod +x /start.sh
 ENV PORT=80
 EXPOSE 80

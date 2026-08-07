@@ -4,6 +4,14 @@
 set -e
 
 PORT="${PORT:-80}"
+# 防呆：PORT 必须是纯数字。Zeabur 等平台若把未展开的占位符（如字面量 "${WEB_PORT}"）
+# 传进来，直接写入 nginx 的 listen 指令会导致启动即崩，这里统一回退 80。
+case "$PORT" in
+  ''|*[!0-9]*)
+    echo "[start.sh] WARN: PORT='$PORT' 不是合法端口，回退为 80" >&2
+    PORT=80
+    ;;
+esac
 # 默认值对应本地 compose 服务名；Zeabur 上由 gateway 服务环境变量里的实际内部地址覆盖。
 BACKEND_URL="${BACKEND_URL:-http://backend:8000}"
 FRONTEND_URL="${FRONTEND_URL:-http://frontend:80}"
