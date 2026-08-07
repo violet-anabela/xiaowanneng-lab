@@ -59,15 +59,19 @@ Gateway 转发原始 `Host`，包括本地非默认端口，避免目录补斜�
 ## Zeabur 配置
 
 - 只给 Gateway 绑定公网域名；
-- `ZBPACK_DOCKERFILE_PATH=gateway/Dockerfile`；
-- Root Directory 留空；
+- Root Directory **留空**（构建上下文 = 仓库根目录）；
+- 服务环境变量设 `ZBPACK_DOCKERFILE_NAME=gateway`，zbpack 会选用仓库根目录的 `Dockerfile.gateway`
+  （注意：`ZBPACK_DOCKERFILE_PATH` 不是 zbpack 支持的变量，配了无效——zbpack 只按
+  `Dockerfile.<名字>` 的命名约定在构建上下文根目录查找；若不设置该变量，退回自动检测会
+  生成自带 `${WEB_PORT}` 模板的静态站镜像，启动即崩）；
 - `PORT=80`；
 - `BACKEND_URL` 和 `FRONTEND_URL` 使用真实 Zeabur 内部地址；
 - 不需要再配置额外 Path 路由。
 
 ## 修改和排障入口
 
-- 镜像入口：`gateway/Dockerfile`
+- 镜像入口：本地 compose 用 `gateway/Dockerfile`（gateway/ 自包含上下文）；Zeabur 用仓库根的
+  `Dockerfile.gateway`（仓库根上下文）。两份内容需保持同步
 - 变量处理与 resolver：`gateway/start.sh`
 - 正式配置模板：`gateway/nginx.conf.template`
 - 备用本地配置：`gateway/nginx.local.conf`（当前 Compose 不使用）
