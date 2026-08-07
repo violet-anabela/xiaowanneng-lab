@@ -4,16 +4,17 @@ import { tools } from '../../data/tools';
 
 const toolMeta = {
   'remove-background': { icon: '切', code: 'GEAR 01' },
-  'json-formatter': { icon: '{}', code: 'GEAR 02' },
-  base64: { icon: '64', code: 'GEAR 03' },
+  'desktop-pet': { icon: '宠', code: 'GEAR 02' },
+  'json-formatter': { icon: '{}', code: 'GEAR 03' },
+  base64: { icon: '64', code: 'GEAR 04' },
 };
 ---
 
-<Base title="工具箱 · 小完能实验室" description="远征装备：轻量、直接、尊重数据边界的在线工具。">
+<Base title="猫爪工具箱 · 小完能实验室" description="远征装备：轻量、直接、尊重数据边界的在线工具。">
   <header class="page-heading">
     <p class="eyebrow">Expedition gear · utilities</p>
     <h1>小而有用的<br /><span class="hl">远征装备</span></h1>
-    <p>能在浏览器完成的就留在浏览器；真正需要算力的，再交给后端服务。</p>
+    <p>每件装备都经过两位队员爪测：你的东西能不出门就不出门，实在费劲的才丢给后端。</p>
   </header>
 
   <div class="gear-grid">
@@ -33,7 +34,7 @@ const toolMeta = {
             <span class:list={['tag', { offline: !available }]}>
               {available ? (tool.needsBackend ? '云端算力' : '浏览器本地') : '正在打包'}
             </span>
-            <span class="gear-action">{available ? '立即使用 →' : 'COMING SOON'}</span>
+            <span class="gear-action">{available ? '上爪试试 →' : 'COMING SOON'}</span>
           </div>
         </>
       );
@@ -48,8 +49,8 @@ const toolMeta = {
 
   <aside class="privacy-memo">
     <span class="pin" aria-hidden="true"></span>
-    <strong>数据边界写在装备上</strong>
-    <p>每件装备都会明确说明数据在浏览器处理，还是需要发送到本站后端。</p>
+    <strong>球球的叮嘱</strong>
+    <p>每件装备都写清楚了：数据是留在你的浏览器里，还是要送到我们后端。看清楚再用喵。</p>
   </aside>
 
   <style>

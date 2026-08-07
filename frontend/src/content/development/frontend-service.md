@@ -28,7 +28,8 @@ Frontend 是网站的**静态展示层**：负责首页、文档、工具界面�
 - `/development/`：项目自身的开发文档；
 - `/tools/`：工具列表；
 - `/tools/remove-background/`：图片去背景工作台；
-- `/skills/`：Skill 下载页。
+- `/skills/`：Skill 下载页；
+- `/gallery/`：猫片墙。照片放在 `frontend/public/gallery/` 目录即自动上墙，文件名（不含扩展名）作为配文，构建期读取目录生成。
 
 ## 请求如何流动
 

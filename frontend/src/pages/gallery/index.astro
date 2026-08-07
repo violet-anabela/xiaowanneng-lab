@@ -1,0 +1,124 @@
+---
+import fs from 'node:fs';
+import Base from '../../layouts/Base.astro';
+
+// 猫片墙的内容来自 public/gallery/ 目录：往里扔图片就会自动上墙，
+// 文件名（不含扩展名）会被当作手写配文显示；可选的「数字-」前缀只用来排序，
+// 不会显示出来（例：`03-十一老师开课了.jpg` → 排第 3，配文"十一老师开课了"）。
+// 路径相对 astro 进程的工作目录（frontend/），不能用 import.meta.url——打包后会指向 dist。
+const exts = /\.(jpe?g|png|webp|gif)$/i;
+const photos = fs
+  .readdirSync('public/gallery')
+  .filter((name) => exts.test(name))
+  .sort()
+  .map((name) => ({
+    src: `/gallery/${encodeURIComponent(name)}`,
+    caption: name.replace(exts, '').replace(/^\d+[-_ ]*/, ''),
+  }));
+---
+
+<Base title="猫片墙 · 小完能实验室" description="考察队随队摄影档案：两只咪的各种照片。">
+  <header class="page-heading">
+    <p class="eyebrow">Expedition shots · cat wall</p>
+    <h1>队员写真墙，<br /><span class="hl">按爪印同意公开</span></h1>
+    <p>铲屎官自封"随队摄影师"，整天偷拍我们。这里是审核通过的部分，挑了能看的，盖爪放行。</p>
+  </header>
+
+  <div class="photo-wall">
+    {photos.map((photo, i) => (
+      <a class="shot" href={photo.src} target="_blank" rel="noopener">
+        <span class="tape" aria-hidden="true"></span>
+        <img src={photo.src} alt={photo.caption} loading={i < 6 ? 'eager' : 'lazy'} />
+        <span class="cap">{photo.caption}</span>
+      </a>
+    ))}
+  </div>
+
+  <p class="wall-note">
+    <i class="paw-i" aria-hidden="true"></i>
+    胶卷持续冲洗中，新照片会陆续贴上来。
+  </p>
+
+  <style>
+    .photo-wall {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(26px, 4vw, 44px);
+      padding-top: 10px;
+    }
+
+    .shot {
+      position: relative;
+      display: block;
+      padding: 12px 12px 46px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: 0 14px 34px rgba(35, 50, 77, 0.18);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+
+    /* 手贴的感觉：错落的旋转角度 */
+    .shot:nth-child(3n + 1) { transform: rotate(-2.2deg); }
+    .shot:nth-child(3n + 2) { transform: rotate(1.6deg) translateY(10px); }
+    .shot:nth-child(3n) { transform: rotate(2.8deg); }
+
+    .shot:hover {
+      transform: rotate(0deg) scale(1.03);
+      box-shadow: 0 22px 48px rgba(35, 50, 77, 0.26);
+      z-index: 2;
+    }
+
+    .shot img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .shot .cap {
+      position: absolute;
+      bottom: 13px;
+      left: 12px;
+      right: 12px;
+      overflow: hidden;
+      text-align: center;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font: 16px/1.2 var(--font-hand);
+      color: var(--ink-soft);
+    }
+
+    .tape {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      width: 92px;
+      height: 26px;
+      background: var(--gold-soft);
+      transform: translateX(-50%) rotate(-2deg);
+      border-left: 1px dashed rgba(255, 255, 255, 0.65);
+      border-right: 1px dashed rgba(255, 255, 255, 0.65);
+    }
+
+    .shot:nth-child(even) .tape { transform: translateX(-50%) rotate(3deg); background: rgba(30, 127, 116, 0.28); }
+
+    .wall-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: max-content;
+      margin: 60px auto 0;
+      color: var(--ink-faint);
+      font: 15px/1.4 var(--font-hand);
+    }
+
+    @media (max-width: 900px) {
+      .photo-wall { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 560px) {
+      .photo-wall { grid-template-columns: 1fr; gap: 34px; }
+      .shot:nth-child(3n + 2) { transform: rotate(1.6deg); }
+    }
+  </style>
+</Base>

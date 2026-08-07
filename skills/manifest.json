@@ -4,6 +4,11 @@
       "version": "1.0.0",
       "source": "skills/remove-background",
       "title": "图片去背景"
+    },
+    "desktop-pet": {
+      "version": "1.0.0",
+      "source": "skills/desktop-pet",
+      "title": "桌宠生成器"
     }
   }
 }

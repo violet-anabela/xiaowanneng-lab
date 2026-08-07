@@ -5,11 +5,11 @@ import manifest from '../../data/skills-manifest.json';
 const list = Object.entries(manifest.skills).map(([slug, meta]) => ({ slug, ...meta }));
 ---
 
-<Base title="Agent Skills · 小完能实验室" description="补给站：可下载、可安装、源码同源的 Agent Skills。">
+<Base title="小鱼干补给站 · 小完能实验室" description="小鱼干补给站：可下载、可安装、源码同源的 Agent Skills。">
   <header class="page-heading">
     <p class="eyebrow">Supply station · capability packs</p>
-    <h1>把本领打包，<br /><span class="hl">送给同路人</span></h1>
-    <p>下载、解压、安装。适用于支持 Skill 规范的 Agent，版本与网站实际使用的核心源码保持同源。</p>
+    <h1>把本领晒干，<br /><span class="hl">打包成小鱼干</span></h1>
+    <p>远征里练成的本领都晾在这儿了，贴好签条随时能领。支持 Skill 规范的 Agent 都能叼走安装，版本和本站实际在用的源码同源。</p>
   </header>
 
   <div class="supply-list">
@@ -28,7 +28,7 @@ const list = Object.entries(manifest.skills).map(([slug, meta]) => ({ slug, ...m
             <code>v{skill.version}</code>
           </div>
           <h2>{skill.title}</h2>
-          <p>独立的说明、依赖清单与调用入口已经包含在压缩包内。</p>
+          <p>说明书、依赖清单和调用入口都塞在包里了，拆开就能用。</p>
           <div class="supply-actions">
             <a class="btn" href={`/skills/${skill.slug}.zip`}>下载最新版 ↓</a>
             <a class="btn btn-secondary" href={`/skills/${skill.slug}-v${skill.version}.zip`}>
@@ -43,12 +43,12 @@ const list = Object.entries(manifest.skills).map(([slug, meta]) => ({ slug, ...m
   <section class="install-guide">
     <div>
       <p class="eyebrow">Three simple steps</p>
-      <h2>安装只需要三步</h2>
+      <h2>三步叼走小鱼干</h2>
     </div>
     <ol>
-      <li><span>01</span><div><strong>下载</strong><p>选择最新版或指定版本压缩包。</p></div></li>
-      <li><span>02</span><div><strong>解压</strong><p>阅读包内的 SKILL.md 和依赖说明。</p></div></li>
-      <li><span>03</span><div><strong>安装</strong><p>放入 Agent 支持的 skills 目录并按说明调用。</p></div></li>
+      <li><span>01</span><div><strong>下载</strong><p>挑一包合口味的小鱼干（最新版或指定版本）。</p></div></li>
+      <li><span>02</span><div><strong>解压</strong><p>拆开包装，先读 SKILL.md 和依赖说明。</p></div></li>
+      <li><span>03</span><div><strong>安装</strong><p>放进 Agent 的 skills 目录，按说明召唤即可。</p></div></li>
     </ol>
   </section>
 

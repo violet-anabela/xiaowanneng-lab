@@ -2,162 +2,207 @@
 import Base from '../../layouts/Base.astro';
 ---
 
-<Base title="图片去背景 · 小完能实验室" description="上传图片，一键生成透明背景 PNG。">
+<Base title="桌宠领养处 · 小完能实验室" description="上传照片，抠图领养，让它在本站每一页陪你溜达。">
   <a class="back-link" href="/tools/"><span aria-hidden="true">←</span> 返回猫爪工具箱</a>
 
   <header class="tool-heading">
     <div>
-      <p class="eyebrow">Vision gear · server powered</p>
-      <h1>图片去背景</h1>
-      <p>上传一张图片，模型帮你把主体抠出来、背景清干净，比十一抠床挡板利索多了。</p>
+      <p class="eyebrow">Adoption center · site pet</p>
+      <h1>桌宠领养处</h1>
+      <p>上传一张照片，模型帮它脱掉背景，起个名字就能领养。领养之后，它会在本站的每一页陪你溜达。</p>
     </div>
     <span class="status-pill">GEAR READY</span>
   </header>
 
   <section class="tool-workspace">
     <div class="workspace-bar">
-      <span>REMOVE BACKGROUND · GEAR 01</span>
+      <span>DESKTOP PET · GEAR 02</span>
       <div><i></i><i></i><i></i></div>
     </div>
 
     <div class="workspace-grid">
       <div class="input-panel">
-        <div class="panel-label"><span>01</span> 选择原图</div>
+        <div class="panel-label"><span>01</span> 挑一张照片</div>
         <input type="file" id="file" accept="image/png,image/jpeg,image/webp" hidden />
         <label class="dropzone" id="dropzone" for="file">
           <span class="upload-glyph" aria-hidden="true"><i></i><i></i><i></i></span>
-          <strong id="file-name">把图片叼到这里来</strong>
-          <span id="file-hint">或者点击选择 JPEG / PNG / WebP</span>
-          <span class="choose-file">选择图片</span>
+          <strong id="file-name">把照片叼到这里来</strong>
+          <span id="file-hint">或者点击选择 JPEG / PNG / WebP，主体清晰效果最好</span>
+          <span class="choose-file">选择照片</span>
           <div id="source-preview" class="source-preview" aria-hidden="true"></div>
         </label>
-
         <div class="action-row">
-          <button class="btn" id="run" type="button">开始处理 <span aria-hidden="true">→</span></button>
-          <span id="status" class="process-status" aria-live="polite">等投喂图片</span>
+          <button class="btn" id="run" type="button">开始抠图 <span aria-hidden="true">→</span></button>
+          <span id="status" class="process-status" aria-live="polite">等投喂照片</span>
         </div>
       </div>
 
       <div class="output-panel">
-        <div class="panel-label"><span>02</span> 透明结果</div>
-        <div id="result" class="result-stage">
-          <div class="empty-result">
+        <div class="panel-label"><span>02</span> 领养手续</div>
+        <div id="stage" class="pet-stage">
+          <div class="empty-result" id="stage-empty">
             <span aria-hidden="true"><i class="paw-i"></i></span>
-            <strong>抠好的图会出现在这里</strong>
-            <p>透明的地方用棋盘格垫着</p>
+            <strong>抠好的小家伙会站在这里</strong>
+            <p>先在左边投喂一张照片</p>
           </div>
+          <img id="pet-preview" class="pet-preview" alt="待领养的桌宠预览" hidden />
+        </div>
+        <div class="adopt-form" id="adopt-form" hidden>
+          <label>它叫什么名字？
+            <input type="text" id="pet-name" maxlength="12" placeholder="比如：球球二号" />
+          </label>
+          <label>个头
+            <input type="range" id="pet-size" min="64" max="160" value="96" step="8" />
+          </label>
+          <button class="btn btn-accent" id="adopt" type="button">领养！<i class="paw-i" aria-hidden="true"></i></button>
         </div>
       </div>
     </div>
   </section>
 
+  <aside class="current-pet" id="current-pet" hidden>
+    <div>
+      <strong>在住居民：<span id="current-name"></span></strong>
+      <p>它正在本站的各个页面溜达。点它有惊喜，拖它会被抗议。</p>
+    </div>
+    <button class="btn btn-secondary" id="release" type="button">送它回老家</button>
+  </aside>
+
   <div class="tool-notes">
-    <div><span>◈</span><p><strong>不会留存</strong>图片用完就忘，不缓存不保存。猫的记性，你懂的。</p></div>
-    <div><span>⌁</span><p><strong>文件限制</strong>JPEG、PNG、WebP，单张不超过 10MB，太重的猎物叼不动。</p></div>
-    <div><span>◷</span><p><strong>首次稍慢</strong>模型冷启动像猫刚睡醒，得先伸个懒腰，稍等一下。</p></div>
+    <div><span>◈</span><p><strong>不会留存</strong>照片只用于本次抠图，宠物存在你自己的浏览器里，我们这边什么都没有。</p></div>
+    <div><span>🐾</span><p><strong>行为手册</strong>它会溜达、打盹、被点了冒爪印，太久不理它还会喊你。</p></div>
+    <div><span>⌁</span><p><strong>想带走？</strong>去小鱼干补给站下载 desktop-pet Skill，让你的 Agent 帮你做一个独立版桌宠。</p></div>
   </div>
 
   <script>
     const API = import.meta.env.PUBLIC_API_BASE_URL || '/api';
+    const PET_KEY = 'xwn-pet';
+
     const fileInput = document.getElementById('file') as HTMLInputElement;
     const runBtn = document.getElementById('run') as HTMLButtonElement;
     const statusEl = document.getElementById('status') as HTMLSpanElement;
-    const resultEl = document.getElementById('result') as HTMLDivElement;
     const dropzone = document.getElementById('dropzone') as HTMLLabelElement;
     const fileName = document.getElementById('file-name') as HTMLSpanElement;
     const fileHint = document.getElementById('file-hint') as HTMLSpanElement;
     const sourcePreview = document.getElementById('source-preview') as HTMLDivElement;
+    const stageEmpty = document.getElementById('stage-empty') as HTMLDivElement;
+    const petPreview = document.getElementById('pet-preview') as HTMLImageElement;
+    const adoptForm = document.getElementById('adopt-form') as HTMLDivElement;
+    const petName = document.getElementById('pet-name') as HTMLInputElement;
+    const petSize = document.getElementById('pet-size') as HTMLInputElement;
+    const adoptBtn = document.getElementById('adopt') as HTMLButtonElement;
+    const currentPet = document.getElementById('current-pet') as HTMLElement;
+    const currentName = document.getElementById('current-name') as HTMLSpanElement;
+    const releaseBtn = document.getElementById('release') as HTMLButtonElement;
 
     let selectedFile: File | undefined;
-    let sourceUrl: string | undefined;
-    let resultUrl: string | undefined;
+    let cutoutDataUrl: string | undefined;
+
+    const setStatus = (text: string, state?: string) => {
+      statusEl.textContent = text;
+      if (state) statusEl.dataset.state = state;
+      else delete statusEl.dataset.state;
+    };
+
+    const refreshCurrent = () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PET_KEY) || 'null');
+        if (saved?.image) {
+          currentPet.hidden = false;
+          currentName.textContent = saved.name || '小伙伴';
+        } else {
+          currentPet.hidden = true;
+        }
+      } catch { currentPet.hidden = true; }
+    };
+    refreshCurrent();
 
     const showFile = (file: File) => {
       selectedFile = file;
-      if (sourceUrl) URL.revokeObjectURL(sourceUrl);
-      sourceUrl = URL.createObjectURL(file);
-      sourcePreview.style.backgroundImage = `url("${sourceUrl}")`;
+      const url = URL.createObjectURL(file);
+      sourcePreview.style.backgroundImage = `url("${url}")`;
       sourcePreview.classList.add('visible');
       fileName.textContent = file.name;
       fileHint.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB · 点击可重新选择`;
-      statusEl.textContent = '图片就位，随时开抠';
-      statusEl.dataset.state = 'ready';
+      setStatus('照片就位，可以开抠', 'ready');
     };
 
     fileInput.addEventListener('change', () => {
       const file = fileInput.files?.[0];
       if (file) showFile(file);
     });
-
-    ['dragenter', 'dragover'].forEach((eventName) => {
-      dropzone.addEventListener(eventName, (event) => {
-        event.preventDefault();
-        dropzone.classList.add('dragging');
-      });
-    });
-
-    ['dragleave', 'drop'].forEach((eventName) => {
-      dropzone.addEventListener(eventName, (event) => {
-        event.preventDefault();
-        dropzone.classList.remove('dragging');
-      });
-    });
-
-    dropzone.addEventListener('drop', (event) => {
-      const file = event.dataTransfer?.files?.[0];
+    ['dragenter', 'dragover'].forEach((n) => dropzone.addEventListener(n, (e) => { e.preventDefault(); dropzone.classList.add('dragging'); }));
+    ['dragleave', 'drop'].forEach((n) => dropzone.addEventListener(n, (e) => { e.preventDefault(); dropzone.classList.remove('dragging'); }));
+    dropzone.addEventListener('drop', (e) => {
+      const file = (e as DragEvent).dataTransfer?.files?.[0];
       if (file) showFile(file);
     });
 
     runBtn.addEventListener('click', async () => {
-      if (!selectedFile) {
-        statusEl.textContent = '先投喂一张图片嘛';
-        statusEl.dataset.state = 'error';
-        return;
-      }
-
-      statusEl.textContent = '施展抠抠神功…';
-      statusEl.dataset.state = 'running';
+      if (!selectedFile) { setStatus('先投喂一张照片嘛', 'error'); return; }
+      setStatus('施展抠抠神功…', 'running');
       runBtn.disabled = true;
-
       try {
         const form = new FormData();
         form.append('file', selectedFile);
         const response = await fetch(`${API}/v1/remove-background`, { method: 'POST', body: form });
-
         if (!response.ok) {
-          const message = await response.text();
-          statusEl.textContent = `处理失败 (${response.status})`;
-          statusEl.dataset.state = 'error';
-          console.error(message);
+          setStatus(`抠图失败 (${response.status})`, 'error');
           return;
         }
-
-        if (resultUrl) URL.revokeObjectURL(resultUrl);
-        resultUrl = URL.createObjectURL(await response.blob());
-        resultEl.replaceChildren();
-
-        const image = document.createElement('img');
-        image.src = resultUrl;
-        image.alt = '去除背景后的透明 PNG';
-
-        const download = document.createElement('a');
-        download.href = resultUrl;
-        download.download = 'remove-background.png';
-        download.className = 'btn result-download';
-        download.textContent = '下载透明 PNG ↓';
-
-        resultEl.append(image, download);
-        resultEl.classList.add('has-result');
-        statusEl.textContent = '抠好了！';
-        statusEl.dataset.state = 'ready';
-      } catch (error) {
-        statusEl.textContent = '后端睡着了，没叫醒';
-        statusEl.dataset.state = 'error';
-        console.error(error);
+        const blob = await response.blob();
+        // 压到 512px 内再存，避免撑爆 localStorage
+        cutoutDataUrl = await downscale(blob, 512);
+        petPreview.src = cutoutDataUrl;
+        petPreview.hidden = false;
+        stageEmpty.hidden = true;
+        adoptForm.hidden = false;
+        setStatus('抠好了！右边办领养手续', 'ready');
+      } catch (err) {
+        setStatus('后端睡着了，没叫醒', 'error');
+        console.error(err);
       } finally {
         runBtn.disabled = false;
       }
     });
+
+    adoptBtn.addEventListener('click', () => {
+      if (!cutoutDataUrl) return;
+      const record = {
+        image: cutoutDataUrl,
+        name: (petName.value || '').trim() || '小伙伴',
+        size: Number(petSize.value) || 96,
+        adoptedAt: Date.now(),
+      };
+      try {
+        localStorage.setItem(PET_KEY, JSON.stringify(record));
+      } catch {
+        setStatus('图太大存不下，换张小点的试试', 'error');
+        return;
+      }
+      setStatus(`${record.name} 领养成功！`, 'ready');
+      refreshCurrent();
+      // 立刻上岗
+      (window as any).XwnPet?.unmount?.();
+      (window as any).XwnPet?.mount?.(record);
+    });
+
+    releaseBtn.addEventListener('click', () => {
+      localStorage.removeItem(PET_KEY);
+      (window as any).XwnPet?.unmount?.();
+      refreshCurrent();
+      setStatus('送走了，常回家看看');
+    });
+
+    async function downscale(blob: Blob, max: number): Promise<string> {
+      const bitmap = await createImageBitmap(blob);
+      const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/png');
+    }
   </script>
 
   <style>
@@ -168,9 +213,8 @@ import Base from '../../layouts/Base.astro';
       justify-content: space-between;
       gap: 28px;
     }
-
     .tool-heading h1 { margin: 0; font-family: var(--font-serif); font-size: clamp(36px, 5.5vw, 58px); line-height: 1.12; }
-    .tool-heading p:not(.eyebrow) { margin: 16px 0 0; color: var(--ink-soft); }
+    .tool-heading p:not(.eyebrow) { margin: 16px 0 0; color: var(--ink-soft); max-width: 560px; }
     .tool-heading .status-pill { transform: rotate(4deg); }
 
     .tool-workspace {
@@ -180,7 +224,6 @@ import Base from '../../layouts/Base.astro';
       background: var(--card);
       box-shadow: 8px 8px 0 rgba(35, 50, 77, 0.14);
     }
-
     .workspace-bar {
       display: flex;
       align-items: center;
@@ -192,9 +235,8 @@ import Base from '../../layouts/Base.astro';
       font: 700 9px/1 var(--font-mono);
       letter-spacing: .16em;
     }
-
     .workspace-bar div { display: flex; gap: 6px; }
-    .workspace-bar i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink); background: transparent; }
+    .workspace-bar i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink); }
     .workspace-bar i:first-child { background: var(--teal); }
 
     .workspace-grid { display: grid; grid-template-columns: 1fr 1fr; }
@@ -204,9 +246,9 @@ import Base from '../../layouts/Base.astro';
     .panel-label span { margin-right: 8px; color: var(--red); font: 700 10px/1 var(--font-mono); }
 
     .dropzone,
-    .result-stage {
+    .pet-stage {
       position: relative;
-      min-height: 390px;
+      min-height: 330px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -222,7 +264,6 @@ import Base from '../../layouts/Base.astro';
       background-position: 0 0, 10px 10px;
       background-size: 20px 20px;
     }
-
     .dropzone { cursor: pointer; transition: border-color 180ms ease, background 180ms ease; }
     .dropzone:hover, .dropzone.dragging { border-color: var(--red); background-color: rgba(217, 79, 48, .045); }
     .dropzone > *:not(.source-preview) { position: relative; z-index: 2; }
@@ -234,7 +275,6 @@ import Base from '../../layouts/Base.astro';
     .dropzone strong { max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-family: var(--font-serif); }
     .dropzone > span:not(.upload-glyph):not(.choose-file) { margin-top: 7px; color: var(--ink-soft); font-size: 12px; }
     .choose-file { margin-top: 18px; padding: 9px 14px; border: 2px solid var(--ink); border-radius: var(--radius); color: var(--ink); background: var(--card); font-size: 12px; font-weight: 700; box-shadow: 3px 3px 0 rgba(35,50,77,.16); }
-
     .source-preview { position: absolute; inset: 0; z-index: 1; opacity: 0; background-position: center; background-size: cover; transition: opacity 180ms ease; }
     .source-preview::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(245,239,226,.15), rgba(245,239,226,.85)); }
     .source-preview.visible { opacity: .55; }
@@ -249,13 +289,34 @@ import Base from '../../layouts/Base.astro';
     .process-status[data-state="error"] { color: var(--red); }
     .process-status[data-state="error"]::before { background: var(--red); }
 
-    .result-stage { border-style: solid; border-color: var(--line); }
-    .empty-result span { display: block; color: var(--gold); font-size: 30px; }
-    .empty-result strong { display: block; margin-top: 18px; font-size: 15px; font-family: var(--font-serif); }
-    .empty-result p { margin: 6px 0 0; color: var(--ink-soft); font-size: 11.5px; }
-    .result-stage.has-result { padding: 18px; justify-content: flex-start; gap: 16px; }
-    .result-stage :global(img) { width: 100%; min-height: 285px; max-height: 320px; object-fit: contain; border-radius: var(--radius-sm); }
-    .result-stage :global(.result-download) { width: 100%; flex: 0 0 auto; }
+    .pet-preview { max-width: 78%; max-height: 240px; object-fit: contain; animation: bob 2.4s ease-in-out infinite; }
+    @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    .adopt-form { display: grid; gap: 14px; margin-top: 18px; }
+    .adopt-form label { display: grid; gap: 6px; color: var(--ink); font-size: 13px; font-weight: 700; font-family: var(--font-serif); }
+    .adopt-form input[type="text"] {
+      padding: 10px 12px;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--card);
+      font-size: 14px;
+    }
+    .adopt-form input[type="text"]:focus-visible { outline-offset: 0; }
+    .adopt-form input[type="range"] { accent-color: var(--red); }
+
+    .current-pet {
+      margin-top: 22px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border: 2px solid var(--teal);
+      border-radius: var(--radius-sm);
+      background: rgba(30, 127, 116, 0.05);
+    }
+    .current-pet strong { font-family: var(--font-serif); font-size: 15px; }
+    .current-pet p { margin: 4px 0 0; color: var(--ink-soft); font-size: 12.5px; }
 
     .tool-notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
     .tool-notes > div { padding: 16px 18px; display: flex; gap: 12px; border: 2px dashed var(--line); border-radius: var(--radius-sm); }
@@ -268,12 +329,12 @@ import Base from '../../layouts/Base.astro';
       .input-panel { border-right: 0; border-bottom: 2px dashed var(--line); }
       .tool-notes { grid-template-columns: 1fr; }
     }
-
     @media (max-width: 620px) {
       .tool-heading { align-items: flex-start; flex-direction: column; }
-      .dropzone, .result-stage { min-height: 320px; }
+      .dropzone, .pet-stage { min-height: 280px; }
       .input-panel, .output-panel { padding: 18px; }
       .action-row { align-items: stretch; flex-direction: column; }
+      .current-pet { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </Base>

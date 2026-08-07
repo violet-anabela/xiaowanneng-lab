@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>__PET_NAME__ · 我的桌宠</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body {
+    background:
+      repeating-linear-gradient(0deg, transparent 0 26px, rgba(35, 50, 77, 0.05) 26px 27px),
+      #f5efe2;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #23324d;
+  }
+  .hint {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-1deg);
+    padding: 10px 16px;
+    border: 2px solid #23324d;
+    border-radius: 6px;
+    background: #fffdf7;
+    box-shadow: 4px 4px 0 rgba(35, 50, 77, 0.16);
+    font-size: 13px;
+  }
+  .hint b { color: #d94f30; }
+</style>
+</head>
+<body>
+  <p class="hint"><b>__PET_NAME__</b> 上岗中：点它、拖它、扔它，或者干脆不理它试试。</p>
+  <script>/*__ENGINE__*/</script>
+  <script>
+    XwnPet.mount(__PET_CONFIG__);
+  </script>
+</body>
+</html>

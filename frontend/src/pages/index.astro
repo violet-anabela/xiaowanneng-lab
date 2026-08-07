@@ -10,14 +10,14 @@ const documentCount = Object.keys(documentModules).length;
 const pad = (n: number) => n.toString().padStart(2, '0');
 ---
 
-<Base title="小完能实验室" description="两只猫的探索手账：记录、造物、分享。">
+<Base title="小完能实验室" description="两只咪的探索手账：记录、造物、分享。">
   <section class="hero">
     <div class="hero-main">
       <p class="eyebrow">Feline expedition · est. 2026</p>
-      <h1>两只猫的<br /><span class="hl">探索手账</span></h1>
+      <h1>两只咪的<br /><span class="hl">探索手账</span></h1>
       <p class="hero-copy">
-        每一次技术探索都是一场小型远征：路线画在文档里，装备收在工具箱里，
-        学会的本领打包成 Skill 送给同路人。
+        每次探索都是咪的小远征：球球负责指路，十一负责冲锋。
+        路线画进手账，装备塞进背包，练成的本领晒成小鱼干，路过的咪都可以叼一包走。
       </p>
       <div class="hero-actions">
         <a class="btn" href="/docs/">翻开手账 <span aria-hidden="true">→</span></a>
@@ -36,7 +36,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     <div class="polaroid-stack">
       <div class="polaroid">
         <span class="tape" aria-hidden="true"></span>
-        <img src="/assets/lab-poster-xiaowanneng-colors.png" alt="小完能实验室的两只猫咪" width="1254" height="1254" />
+        <img src="/assets/lab-poster-xiaowanneng-colors.png" alt="小完能实验室的两只咪" width="1254" height="1254" />
         <span class="cap">考察队全体成员 · 出发前合影</span>
       </div>
       <div class="stamp" aria-hidden="true">XWN·LAB<br />APPROVED<br />★ 2026 ★</div>
@@ -56,22 +56,22 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     <div class="card-grid">
       <a class="card trail-card" href="/docs/">
         <span class="no no-red">TRAIL 01</span>
-        <h3>文档与复盘</h3>
-        <p>把探索过程写下来：技术笔记、项目决策，以及值得记住的坑。</p>
+        <h3>巡逻手账</h3>
+        <p>把爪印留在纸上：技术笔记、项目决策，还有值得记住的坑（大多是十一先踩的）。咪不识字的部分，由铲屎官代笔。</p>
         <span class="go go-red">沿着足迹走 <i class="paw-i" aria-hidden="true"></i></span>
         <span class="count">{pad(documentCount)} 篇记录</span>
       </a>
       <a class="card trail-card" href="/tools/">
         <span class="no no-teal">TRAIL 02</span>
-        <h3>轻量工具箱</h3>
-        <p>图片去背景等实用装备。该在浏览器完成的就不上传，需要算力的交给后端。</p>
+        <h3>猫爪工具箱</h3>
+        <p>攒下的趁手小装备，比如图片去背景。你的图能不出门就不出门，实在费劲的才丢给后端。</p>
         <span class="go go-teal">打开背包 <i class="paw-i" aria-hidden="true"></i></span>
         <span class="count">{pad(availableTools)} 件可用</span>
       </a>
       <a class="card trail-card" href="/skills/">
         <span class="no no-gold">TRAIL 03</span>
-        <h3>可复用 Skills</h3>
-        <p>下载、解压、安装，让任何兼容 Skill 的 Agent 直接获得新能力。</p>
+        <h3>小鱼干补给站</h3>
+        <p>我们练成的本领，晒干打包成小鱼干。任何兼容 Skill 的 Agent 叼走就能用。</p>
         <span class="go go-gold">领取补给 <i class="paw-i" aria-hidden="true"></i></span>
         <span class="count">{pad(skillCount)} 个补给包</span>
       </a>
@@ -81,7 +81,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
   <section class="crew">
     <div class="section-head">
       <h2>考察队成员档案</h2>
-      <span><i class="paw-i" aria-hidden="true"></i> MEET THE CREW</span>
+      <a class="crew-more" href="/gallery/"><i class="paw-i" aria-hidden="true"></i> 更多猫片 →</a>
     </div>
     <div class="crew-grid">
       <article class="card crew-card">
@@ -97,7 +97,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
           <div><dt>主粮</dt><dd>干饭十级选手，饭点比闹钟准</dd></div>
           <div><dt>装备</dt><dd>激光笔、逗猫棒，见玩具走不动路</dd></div>
           <div><dt>绝活</dt><dd>抠开床挡板，钻进床底探险</dd></div>
-          <div><dt>状态</dt><dd>粘妈妈中——打游戏也要挨着坐</dd></div>
+          <div><dt>状态</dt><dd>粘妈妈中，打游戏也要挨着坐</dd></div>
         </dl>
         <p class="crew-quote">"挡板？不存在的。"</p>
       </article>
@@ -122,12 +122,22 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     </div>
   </section>
 
+  <aside class="origin-memo">
+    <span class="origin-pin" aria-hidden="true"></span>
+    <strong>起名内幕</strong>
+    <p>
+      实验室本来想叫"小浣熊"，可惜咪不识字，注册的时候抄成了"小完能"。
+      发现时招牌已经挂上了，只好将错就错。反正听起来像什么都能完成的样子。
+    </p>
+    <em>—— 队员一致否认此事 <i class="paw-i" aria-hidden="true"></i></em>
+  </aside>
+
   <aside class="archive-strip">
     <span class="archive-label">队内档案 / INTERNAL</span>
     <div class="archive-tabs">
-      <a href="/development/frontend-service/">FRONTEND · 静态站</a>
-      <a href="/development/backend-service/">BACKEND · 推理服务</a>
-      <a href="/development/gateway-service/">GATEWAY · 反向代理</a>
+      <a href="/development/frontend-service/">FRONTEND · 门面担当</a>
+      <a href="/development/backend-service/">BACKEND · 干重活的</a>
+      <a href="/development/gateway-service/">GATEWAY · 看大门的</a>
     </div>
   </aside>
 
@@ -237,6 +247,8 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     }
     .section-head h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(26px, 4vw, 34px); }
     .section-head span { font: 700 10px/1 var(--font-mono); letter-spacing: 0.25em; color: var(--ink-soft); white-space: nowrap; }
+    .crew-more { display: inline-flex; align-items: center; gap: 6px; color: var(--red); font-weight: 700; font-size: 13px; white-space: nowrap; }
+    .crew-more:hover { text-decoration: underline; text-underline-offset: 4px; }
 
     .trail-card { display: flex; flex-direction: column; padding-top: 34px; }
     .no {
@@ -315,6 +327,41 @@ const pad = (n: number) => n.toString().padStart(2, '0');
       font: 16px/1.5 var(--font-hand);
       color: var(--ink-soft);
       text-align: right;
+    }
+
+    .origin-memo {
+      position: relative;
+      width: min(520px, 100%);
+      margin: 88px auto 0;
+      padding: 26px 30px 22px;
+      background: #fff9c9;
+      box-shadow: 0 14px 30px rgba(35, 50, 77, 0.16);
+      transform: rotate(-1.4deg);
+    }
+
+    .origin-pin {
+      position: absolute;
+      top: -9px;
+      left: 50%;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--red);
+      transform: translateX(-50%);
+    }
+
+    .origin-memo strong { display: block; font-family: var(--font-hand); font-size: 19px; color: #5c4f14; }
+    .origin-memo p { margin: 10px 0 0; font-family: var(--font-hand); font-size: 15.5px; line-height: 1.9; color: #6b5d1e; }
+    .origin-memo em {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 12px;
+      font: 13.5px/1.4 var(--font-hand);
+      font-style: normal;
+      color: #8a7a2e;
     }
 
     .archive-strip {
