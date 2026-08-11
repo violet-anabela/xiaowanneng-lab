@@ -28,7 +28,7 @@ def main() -> int:
         default=None,
         help="输出 PNG 路径（默认 <input 去后缀>-no-bg.png）",
     )
-    parser.add_argument("--model", default="u2net", help="rembg 模型名（默认 u2net）")
+    parser.add_argument("--model", default="isnet-general-use", help="rembg 模型名（默认 isnet-general-use，抠白色/毛茸茸主体明显更干净）")
     args = parser.parse_args()
 
     out = args.output or (str(pathlib.Path(args.input).with_suffix("")) + "-no-bg.png")

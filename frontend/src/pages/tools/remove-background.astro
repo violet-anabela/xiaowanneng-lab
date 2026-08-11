@@ -120,13 +120,19 @@ import Base from '../../layouts/Base.astro';
       runBtn.disabled = true;
 
       try {
+        // 超过 8MB 的图先在浏览器里压一遍，免得撞上后端 10MB 限制
+        let payload: Blob = selectedFile;
+        if (selectedFile.size > 8 * 1024 * 1024) {
+          statusEl.textContent = '图有点大，先压一压…';
+          payload = await shrinkImage(selectedFile, 2560);
+        }
         const form = new FormData();
-        form.append('file', selectedFile);
+        form.append('file', payload, selectedFile.name.replace(/\.\w+$/, '') + '.jpg');
         const response = await fetch(`${API}/v1/remove-background`, { method: 'POST', body: form });
 
         if (!response.ok) {
           const message = await response.text();
-          statusEl.textContent = `处理失败 (${response.status})`;
+          statusEl.textContent = response.status === 413 ? '图太大了，后端叼不动（限 10MB）' : `处理失败 (${response.status})`;
           statusEl.dataset.state = 'error';
           console.error(message);
           return;
@@ -158,6 +164,16 @@ import Base from '../../layouts/Base.astro';
         runBtn.disabled = false;
       }
     });
+
+    async function shrinkImage(file: Blob, maxSide: number): Promise<Blob> {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      return await new Promise((resolve) => canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.9));
+    }
   </script>
 
   <style>

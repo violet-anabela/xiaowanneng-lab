@@ -4,6 +4,16 @@
       "version": "1.0.0",
       "source": "skills/remove-background",
       "title": "图片去背景"
+    },
+    "desktop-pet": {
+      "version": "1.0.0",
+      "source": "skills/desktop-pet",
+      "title": "桌宠生成器"
+    },
+    "csi1000-kronos-forecast": {
+      "version": "1.0.0",
+      "source": "skills/csi1000-kronos-forecast",
+      "title": "中证1000 Kronos 预测"
     }
   }
 }

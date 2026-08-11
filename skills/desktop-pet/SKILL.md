@@ -25,17 +25,23 @@ description: 把一张照片做成会溜达、会打盹、能拖拽的单文件�
 - 有 remove-background Skill 时优先用它：`python scripts/remove_bg.py photo.jpg -o cutout.png`
 - 或引导用户使用在线工具：https://violet.hk.cn/tools/remove-background
 
-**第 2 步：生成桌宠**：
+**第 2 步：生成桌宠**（单图版最简单，也可以给不同状态配不同的图）：
 
 ```bash
+# 单图版
 python scripts/make_pet.py cutout.png --name 球球 --size 96 -o my-pet.html
+
+# 五状态豪华版（吃饭/睡觉/被拎/被点时换不同的图，全部可选）
+python scripts/make_pet.py idle.png --eat eat.png --sleep sleep.png \
+    --drag drag.png --click click.png --name 球球 -o my-pet.html
 ```
 
 参数说明：
 
 | 参数 | 说明 | 默认 |
 |---|---|---|
-| `image` | 透明背景 PNG/WebP | 必填 |
+| `image` | 站立/溜达状态，透明背景 PNG/WebP | 必填 |
+| `--eat` / `--sleep` / `--drag` / `--click` | 对应状态的图，缺省回退到站立图 | 可选 |
 | `--name` | 宠物名字，会显示在气泡和标题里 | 小伙伴 |
 | `--size` | 显示大小（px），48–200 | 96 |
 | `-o` | 输出路径 | my-pet.html |
@@ -43,9 +49,10 @@ python scripts/make_pet.py cutout.png --name 球球 --size 96 -o my-pet.html
 ## 行为清单（引擎内置，无需配置）
 
 - 沿页面底部来回溜达，走到边缘会转身；随机停下呼吸待机
-- 鼠标拖拽可以拎起来，松手后抛物线落地（落地会吐槽）
-- 点击：冒爪印和爱心，随机说一句话
-- 随机趴下打盹（Zzz 气泡），拖动会吵醒它
+- 随机开饭（配了 `--eat` 图会换装，气泡"干饭中…"）
+- 随机趴下打盹（配了 `--sleep` 图会换装，Zzz 气泡），拖动会吵醒它
+- 鼠标拖拽可以拎起来（配了 `--drag` 图会换装），松手后抛物线落地
+- 点击：冒爪印和爱心、随机说一句话（配了 `--click` 图会闪现表情）
 - 超过 5 分钟没有任何交互，它会主动喊你（"喵？"）
 
 ## 定制入口

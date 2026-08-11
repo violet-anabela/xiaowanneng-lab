@@ -28,6 +28,8 @@ Frontend 是网站的**静态展示层**：负责首页、文档、工具界面�
 - `/development/`：项目自身的开发文档；
 - `/tools/`：工具列表；
 - `/tools/remove-background/`：图片去背景工作台；
+- `/tools/desktop-pet/`：桌宠领养处（复用去背景 API，配置存 localStorage，引擎在 `public/pet/xwn-pet.js`）；
+- `/tools/observatory/`：中证1000观测站（装备之一），浏览器端拉取 `/api/v1/observatory/*` 展示中证1000 每日预测（静态壳 + 客户端渲染）；
 - `/skills/`：Skill 下载页；
 - `/gallery/`：猫片墙。照片放在 `frontend/public/gallery/` 目录即自动上墙，文件名（不含扩展名）作为配文，构建期读取目录生成。
 

@@ -19,6 +19,17 @@ dependencies = [
     "scikit-image>=0.19",
     "imageio>=2.27",
     "requests>=2.28",
+    # ---- 观测站（中证1000 Kronos 每日预测）----
+    # torch 固定走 CPU 轮子源（见 [tool.uv.sources]），避免拉 CUDA 版把镜像撑爆。
+    "torch>=2.2,<3",
+    "pandas>=2.0",
+    "matplotlib>=3.8",
+    "akshare>=1.14",
+    "exchange-calendars>=4.5",
+    "einops>=0.8",
+    "safetensors>=0.4",
+    "huggingface-hub>=0.30",
+    "tqdm>=4.66",
 ]
 
 [tool.uv]
@@ -31,3 +42,12 @@ override-dependencies = [
     "numba>=0.60",
     "llvmlite>=0.43",
 ]
+
+# torch 只从 PyTorch 官方 CPU 索引取（linux 上默认 PyPI 轮子捆绑 CUDA，体积 2GB+）。
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

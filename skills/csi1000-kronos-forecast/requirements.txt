@@ -1,0 +1,13 @@
+# csi1000-kronos-forecast 运行依赖。
+# Kronos 模型代码本身不在此列（见 SKILL.md：需单独 clone 官方仓库），
+# 其权重由 huggingface_hub 在首次运行时自动下载并缓存。
+torch>=2.0.0
+numpy
+pandas>=2.0
+matplotlib>=3.8
+akshare>=1.14
+exchange_calendars>=4.5
+huggingface_hub>=0.30
+einops>=0.8
+safetensors>=0.4
+tqdm

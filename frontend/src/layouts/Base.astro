@@ -84,9 +84,9 @@ const isActive = (href: string) =>
       (function () {
         try {
           var saved = JSON.parse(localStorage.getItem('xwn-pet') || 'null');
-          if (!saved || !saved.image) return;
+          if (!saved || !(saved.image || (saved.images && saved.images.idle))) return;
           var s = document.createElement('script');
-          s.src = '/pet/xwn-pet.js';
+          s.src = '/pet/xwn-pet.js?v=3'; // 引擎有更新时同步递增（desktop-pet.astro 里还有一处）
           s.onload = function () { window.XwnPet && window.XwnPet.mount(saved); };
           document.body.appendChild(s);
         } catch (e) { /* 宠物走丢也不能影响页面 */ }

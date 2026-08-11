@@ -25,17 +25,10 @@ export const tools: ToolMeta[] = [
     status: 'available',
   },
   {
-    slug: 'json-formatter',
-    title: 'JSON 格式化',
-    description: '把乱成毛线团的 JSON 理顺（或者压扁）。全程在你浏览器里，一个字节都不外传。',
-    needsBackend: false,
-    status: 'coming-soon',
-  },
-  {
-    slug: 'base64',
-    title: 'Base64 编解码',
-    description: '文本和 Base64 互相变身的小把戏，纯前端，不用惊动后端。',
-    needsBackend: false,
-    status: 'coming-soon',
+    slug: 'observatory',
+    title: '中证1000观测站',
+    description: '每个交易日开盘前，后端自己掐爪一算：抓最新行情，让 Kronos 模型推演路径，记进一本只增不改的账。',
+    needsBackend: true,
+    status: 'available',
   },
 ];

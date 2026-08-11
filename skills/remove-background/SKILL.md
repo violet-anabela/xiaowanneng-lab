@@ -10,7 +10,7 @@ description: 去除图片背景，返回带透明通道的 PNG。调用本地 re
 
 ## 环境要求
 - Python 3.10+
-- 首次运行会下载 rembg 模型权重（约 176MB），存放于 `U2NET_HOME`（默认 `~/.u2net`）。
+- 首次运行会下载 rembg 模型权重（isnet-general-use，约 179MB），存放于 `U2NET_HOME`（默认 `~/.u2net`）。
   模型权重**不**随本 Skill 分发（许可证与体积原因），由 rembg 首次使用时自动下载。
 
 ## 安装依赖
@@ -39,7 +39,7 @@ from remove_background_skill import remove_background
 from rembg import new_session
 from PIL import Image
 
-session = new_session("u2net")
+session = new_session("isnet-general-use")
 with Image.open("input.jpg") as img:
     result = remove_background(img.convert("RGB"), session=session)
 result.save("output.png")

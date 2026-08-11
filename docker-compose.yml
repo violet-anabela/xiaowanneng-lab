@@ -7,7 +7,8 @@
 # 启动：docker compose up --build
 # 访问：http://localhost:18080
 #
-# 注意：backend 在构建期下载 u2net 模型（需网络，约百 MB）；无网络时后端镜像构建会失败。
+# 注意：backend 在构建期下载 isnet-general-use（抠图，约180MB）与 Kronos 权重（经 hf-mirror.com，
+# 观测站预测用），构建时需要网络；无网络时后端镜像构建会失败。
 services:
   backend:
     build:
@@ -17,6 +18,9 @@ services:
       PORT: 8000
     ports:
       - "18000:8000"
+    volumes:
+      # 观测站账本持久化（对应 Zeabur 上挂到 /data 的 Volume）
+      - observatory-data:/data
     restart: unless-stopped
 
   frontend:
@@ -43,3 +47,6 @@ services:
       - backend
       - frontend
     restart: unless-stopped
+
+volumes:
+  observatory-data:

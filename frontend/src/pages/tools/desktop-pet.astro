@@ -1,61 +1,133 @@
 ---
 import Base from '../../layouts/Base.astro';
+
+const slots = [
+  { key: 'idle', label: '站立 / 溜达', required: true, hint: '必填，它的基本形态' },
+  { key: 'eat', label: '吃饭', required: false, hint: '开饭时换这张' },
+  { key: 'sleep', label: '睡觉', required: false, hint: '打盹时换这张' },
+  { key: 'drag', label: '被拎起来', required: false, hint: '拖拽时换这张' },
+  { key: 'click', label: '被点到', required: false, hint: '点它时闪现这张' },
+];
+
+// 预设猫档案：卡片渲染与客户端领养脚本共用（经下方 JSON script 传给浏览器）
+const presets = [
+  {
+    key: 'shiyi',
+    name: '沈十一',
+    desc: '奶牛猫，溜达是警戒蹲姿，睡觉四仰八叉，被点会闭眼享受。',
+    size: 104,
+    images: {
+      idle: '/pet/presets/shiyi-idle.png',
+      sleep: '/pet/presets/shiyi-sleep.png',
+      click: '/pet/presets/shiyi-click.png',
+    },
+  },
+  {
+    key: 'qiuqiu',
+    name: '沈球球',
+    desc: '长毛银渐层，平时是插画形态，点她会炸毛、睡觉会躺平，都是真身出镜。',
+    size: 100,
+    images: {
+      idle: '/pet/presets/qiuqiu-idle.png',
+      sleep: '/pet/presets/qiuqiu-sleep.png',
+      click: '/pet/presets/qiuqiu-click.png',
+    },
+  },
+];
+
+const stateLabels: Record<string, string> = {
+  idle: '溜达', eat: '干饭', sleep: '睡觉', drag: '被拎', click: '被点',
+};
 ---
 
-<Base title="桌宠领养处 · 小完能实验室" description="上传照片，抠图领养，让它在本站每一页陪你溜达。">
+<Base title="桌宠领养处 · 小完能实验室" description="选一只咪或上传照片，分状态抠图，领养一只全站陪逛的桌宠。">
   <a class="back-link" href="/tools/"><span aria-hidden="true">←</span> 返回猫爪工具箱</a>
 
   <header class="tool-heading">
     <div>
       <p class="eyebrow">Adoption center · site pet</p>
       <h1>桌宠领养处</h1>
-      <p>上传一张照片，模型帮它脱掉背景，起个名字就能领养。领养之后，它会在本站的每一页陪你溜达。</p>
+      <p>领一只现成的咪，或者用自己的照片建档：给每个状态传一张照片，模型负责脱背景。领养之后，它会在本站每一页陪你溜达、干饭、打盹。</p>
     </div>
     <span class="status-pill">GEAR READY</span>
   </header>
 
+  <section class="preset-section">
+    <div class="section-head"><h2>现成的咪</h2><span>RESIDENT CATS</span></div>
+    <div class="preset-grid">
+      {presets.map((preset) => (
+        <article class="card preset-card">
+          <div class="preset-main">
+            <img src={preset.images.idle} alt={`${preset.name}立绘`} loading="lazy" />
+            <div>
+              <h3>{preset.name}</h3>
+              <p>{preset.desc}</p>
+              <div class="preset-actions">
+                <button class="btn" type="button" data-adopt-preset={preset.key}>
+                  领养{preset.name.slice(1)} <i class="paw-i" aria-hidden="true"></i>
+                </button>
+                <button class="preset-toggle" type="button" aria-expanded="false">
+                  它会些啥 <i aria-hidden="true">▾</i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="preset-states" hidden>
+            {slots.map((slot) => {
+              const src = preset.images[slot.key];
+              return (
+                <figure class:list={['state-chip', { missing: !src }]}>
+                  {src
+                    ? <img src={src} alt={`${preset.name}的${stateLabels[slot.key]}状态`} loading="lazy" />
+                    : <span class="state-empty" aria-hidden="true">－</span>}
+                  <figcaption>
+                    {stateLabels[slot.key]}
+                    {!src && <small>回退溜达图</small>}
+                  </figcaption>
+                </figure>
+              );
+            })}
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <script type="application/json" id="preset-json" set:html={JSON.stringify(presets)} />
+
   <section class="tool-workspace">
     <div class="workspace-bar">
-      <span>DESKTOP PET · GEAR 02</span>
+      <span>CUSTOM PET · GEAR 02</span>
       <div><i></i><i></i><i></i></div>
     </div>
 
-    <div class="workspace-grid">
-      <div class="input-panel">
-        <div class="panel-label"><span>01</span> 挑一张照片</div>
-        <input type="file" id="file" accept="image/png,image/jpeg,image/webp" hidden />
-        <label class="dropzone" id="dropzone" for="file">
-          <span class="upload-glyph" aria-hidden="true"><i></i><i></i><i></i></span>
-          <strong id="file-name">把照片叼到这里来</strong>
-          <span id="file-hint">或者点击选择 JPEG / PNG / WebP，主体清晰效果最好</span>
-          <span class="choose-file">选择照片</span>
-          <div id="source-preview" class="source-preview" aria-hidden="true"></div>
-        </label>
-        <div class="action-row">
-          <button class="btn" id="run" type="button">开始抠图 <span aria-hidden="true">→</span></button>
-          <span id="status" class="process-status" aria-live="polite">等投喂照片</span>
-        </div>
+    <div class="custom-body">
+      <div class="panel-label"><span>01</span> 自己建档：给每个状态投喂照片（自动抠图）</div>
+      <div class="slot-grid">
+        {slots.map((slot) => (
+          <div class="slot" data-slot={slot.key} data-required={slot.required ? '1' : ''}>
+            <input type="file" accept="image/png,image/jpeg,image/webp" hidden />
+            <button class="slot-drop" type="button">
+              <img alt="" hidden />
+              <span class="slot-plus" aria-hidden="true">＋</span>
+            </button>
+            <strong>{slot.label}{slot.required && <em> *</em>}</strong>
+            <small class="slot-status">{slot.hint}</small>
+            <button class="slot-clear" type="button" hidden aria-label={`清除${slot.label}`}>✕</button>
+          </div>
+        ))}
       </div>
 
-      <div class="output-panel">
-        <div class="panel-label"><span>02</span> 领养手续</div>
-        <div id="stage" class="pet-stage">
-          <div class="empty-result" id="stage-empty">
-            <span aria-hidden="true"><i class="paw-i"></i></span>
-            <strong>抠好的小家伙会站在这里</strong>
-            <p>先在左边投喂一张照片</p>
-          </div>
-          <img id="pet-preview" class="pet-preview" alt="待领养的桌宠预览" hidden />
-        </div>
-        <div class="adopt-form" id="adopt-form" hidden>
-          <label>它叫什么名字？
-            <input type="text" id="pet-name" maxlength="12" placeholder="比如：球球二号" />
-          </label>
-          <label>个头
-            <input type="range" id="pet-size" min="64" max="160" value="96" step="8" />
-          </label>
-          <button class="btn btn-accent" id="adopt" type="button">领养！<i class="paw-i" aria-hidden="true"></i></button>
-        </div>
+      <div class="panel-label second"><span>02</span> 办领养手续</div>
+      <div class="adopt-form">
+        <label>它叫什么名字？
+          <input type="text" id="pet-name" maxlength="12" placeholder="比如：球球二号" />
+        </label>
+        <label>个头
+          <input type="range" id="pet-size" min="64" max="160" value="96" step="8" />
+        </label>
+        <button class="btn btn-accent" id="adopt" type="button" disabled>领养！<i class="paw-i" aria-hidden="true"></i></button>
+        <span id="status" class="process-status" aria-live="polite">先给「站立」传一张照片</span>
       </div>
     </div>
   </section>
@@ -70,33 +142,39 @@ import Base from '../../layouts/Base.astro';
 
   <div class="tool-notes">
     <div><span>◈</span><p><strong>不会留存</strong>照片只用于本次抠图，宠物存在你自己的浏览器里，我们这边什么都没有。</p></div>
-    <div><span>🐾</span><p><strong>行为手册</strong>它会溜达、打盹、被点了冒爪印，太久不理它还会喊你。</p></div>
-    <div><span>⌁</span><p><strong>想带走？</strong>去小鱼干补给站下载 desktop-pet Skill，让你的 Agent 帮你做一个独立版桌宠。</p></div>
+    <div><span>🐾</span><p><strong>拍摄建议</strong>主体和背景反差越大抠得越干净。白猫贴白墙属于地狱难度，球球已经验证过了。</p></div>
+    <div><span>⌁</span><p><strong>想带走？</strong>去小鱼干补给站下载 desktop-pet Skill，让你的 Agent 帮你做独立版桌宠。</p></div>
   </div>
 
   <script>
     const API = import.meta.env.PUBLIC_API_BASE_URL || '/api';
     const PET_KEY = 'xwn-pet';
 
-    const fileInput = document.getElementById('file') as HTMLInputElement;
-    const runBtn = document.getElementById('run') as HTMLButtonElement;
+    // 预设档案与卡片渲染同源（页面里的 JSON script），避免两处维护
+    const PRESETS: Record<string, any> = Object.fromEntries(
+      JSON.parse(document.getElementById('preset-json')!.textContent!).map((p: any) => [p.key, p])
+    );
+
+    // 「它会些啥」展开/收起
+    document.querySelectorAll<HTMLButtonElement>('.preset-toggle').forEach((toggle) => {
+      toggle.addEventListener('click', () => {
+        const states = toggle.closest('.preset-card')!.querySelector('.preset-states') as HTMLElement;
+        const open = states.hidden;
+        states.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.classList.toggle('open', open);
+      });
+    });
+
     const statusEl = document.getElementById('status') as HTMLSpanElement;
-    const dropzone = document.getElementById('dropzone') as HTMLLabelElement;
-    const fileName = document.getElementById('file-name') as HTMLSpanElement;
-    const fileHint = document.getElementById('file-hint') as HTMLSpanElement;
-    const sourcePreview = document.getElementById('source-preview') as HTMLDivElement;
-    const stageEmpty = document.getElementById('stage-empty') as HTMLDivElement;
-    const petPreview = document.getElementById('pet-preview') as HTMLImageElement;
-    const adoptForm = document.getElementById('adopt-form') as HTMLDivElement;
+    const adoptBtn = document.getElementById('adopt') as HTMLButtonElement;
     const petName = document.getElementById('pet-name') as HTMLInputElement;
     const petSize = document.getElementById('pet-size') as HTMLInputElement;
-    const adoptBtn = document.getElementById('adopt') as HTMLButtonElement;
     const currentPet = document.getElementById('current-pet') as HTMLElement;
     const currentName = document.getElementById('current-name') as HTMLSpanElement;
     const releaseBtn = document.getElementById('release') as HTMLButtonElement;
 
-    let selectedFile: File | undefined;
-    let cutoutDataUrl: string | undefined;
+    const images: Record<string, string> = {};
 
     const setStatus = (text: string, state?: string) => {
       statusEl.textContent = text;
@@ -107,84 +185,110 @@ import Base from '../../layouts/Base.astro';
     const refreshCurrent = () => {
       try {
         const saved = JSON.parse(localStorage.getItem(PET_KEY) || 'null');
-        if (saved?.image) {
+        if (saved?.images?.idle || saved?.image) {
           currentPet.hidden = false;
           currentName.textContent = saved.name || '小伙伴';
-        } else {
-          currentPet.hidden = true;
-        }
+        } else currentPet.hidden = true;
       } catch { currentPet.hidden = true; }
     };
     refreshCurrent();
 
-    const showFile = (file: File) => {
-      selectedFile = file;
-      const url = URL.createObjectURL(file);
-      sourcePreview.style.backgroundImage = `url("${url}")`;
-      sourcePreview.classList.add('visible');
-      fileName.textContent = file.name;
-      fileHint.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB · 点击可重新选择`;
-      setStatus('照片就位，可以开抠', 'ready');
-    };
-
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files?.[0];
-      if (file) showFile(file);
-    });
-    ['dragenter', 'dragover'].forEach((n) => dropzone.addEventListener(n, (e) => { e.preventDefault(); dropzone.classList.add('dragging'); }));
-    ['dragleave', 'drop'].forEach((n) => dropzone.addEventListener(n, (e) => { e.preventDefault(); dropzone.classList.remove('dragging'); }));
-    dropzone.addEventListener('drop', (e) => {
-      const file = (e as DragEvent).dataTransfer?.files?.[0];
-      if (file) showFile(file);
-    });
-
-    runBtn.addEventListener('click', async () => {
-      if (!selectedFile) { setStatus('先投喂一张照片嘛', 'error'); return; }
-      setStatus('施展抠抠神功…', 'running');
-      runBtn.disabled = true;
-      try {
-        const form = new FormData();
-        form.append('file', selectedFile);
-        const response = await fetch(`${API}/v1/remove-background`, { method: 'POST', body: form });
-        if (!response.ok) {
-          setStatus(`抠图失败 (${response.status})`, 'error');
-          return;
-        }
-        const blob = await response.blob();
-        // 压到 512px 内再存，避免撑爆 localStorage
-        cutoutDataUrl = await downscale(blob, 512);
-        petPreview.src = cutoutDataUrl;
-        petPreview.hidden = false;
-        stageEmpty.hidden = true;
-        adoptForm.hidden = false;
-        setStatus('抠好了！右边办领养手续', 'ready');
-      } catch (err) {
-        setStatus('后端睡着了，没叫醒', 'error');
-        console.error(err);
-      } finally {
-        runBtn.disabled = false;
-      }
-    });
-
-    adoptBtn.addEventListener('click', () => {
-      if (!cutoutDataUrl) return;
-      const record = {
-        image: cutoutDataUrl,
-        name: (petName.value || '').trim() || '小伙伴',
-        size: Number(petSize.value) || 96,
-        adoptedAt: Date.now(),
-      };
+    const adopt = (record: any) => {
       try {
         localStorage.setItem(PET_KEY, JSON.stringify(record));
       } catch {
         setStatus('图太大存不下，换张小点的试试', 'error');
-        return;
+        return false;
       }
-      setStatus(`${record.name} 领养成功！`, 'ready');
       refreshCurrent();
-      // 立刻上岗
       (window as any).XwnPet?.unmount?.();
-      (window as any).XwnPet?.mount?.(record);
+      if ((window as any).XwnPet) (window as any).XwnPet.mount(record);
+      else {
+        const s = document.createElement('script');
+        s.src = '/pet/xwn-pet.js?v=3'; // 与 Base.astro loader 的版本号保持一致
+        s.onload = () => (window as any).XwnPet.mount(record);
+        document.body.appendChild(s);
+      }
+      return true;
+    };
+
+    // ---- 预设领养 ----
+    document.querySelectorAll<HTMLButtonElement>('[data-adopt-preset]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const preset = PRESETS[btn.dataset.adoptPreset!];
+        if (adopt({ ...preset, adoptedAt: Date.now() })) {
+          setStatus(`${preset.name} 领养成功，已经开始溜达了！`, 'ready');
+        }
+      });
+    });
+
+    // ---- 自定义槽位 ----
+    const updateAdoptState = () => {
+      adoptBtn.disabled = !images.idle;
+      if (images.idle) setStatus('材料齐了，可以办手续', 'ready');
+    };
+
+    document.querySelectorAll<HTMLDivElement>('.slot').forEach((slot) => {
+      const key = slot.dataset.slot!;
+      const input = slot.querySelector('input') as HTMLInputElement;
+      const drop = slot.querySelector('.slot-drop') as HTMLButtonElement;
+      const img = slot.querySelector('img') as HTMLImageElement;
+      const plus = slot.querySelector('.slot-plus') as HTMLSpanElement;
+      const status = slot.querySelector('.slot-status') as HTMLElement;
+      const clear = slot.querySelector('.slot-clear') as HTMLButtonElement;
+      const hint = status.textContent;
+
+      drop.addEventListener('click', () => input.click());
+      clear.addEventListener('click', () => {
+        delete images[key];
+        img.hidden = true;
+        plus.hidden = false;
+        clear.hidden = true;
+        status.textContent = hint;
+        slot.classList.remove('done');
+        updateAdoptState();
+      });
+
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        status.textContent = '抠图中…';
+        slot.classList.add('busy');
+        try {
+          // 桌宠最终只要 512px，大图先在浏览器里压小再上传，又快又不会撞 10MB 限制
+          let payload: Blob = file;
+          if (file.size > 2 * 1024 * 1024) payload = await shrinkImage(file, 1600);
+          const form = new FormData();
+          form.append('file', payload, 'photo.jpg');
+          const response = await fetch(`${API}/v1/remove-background`, { method: 'POST', body: form });
+          if (!response.ok) { status.textContent = response.status === 413 ? '图太大了' : `失败 (${response.status})`; return; }
+          const dataUrl = await downscale(await response.blob(), 512);
+          images[key] = dataUrl;
+          img.src = dataUrl;
+          img.hidden = false;
+          plus.hidden = true;
+          clear.hidden = false;
+          status.textContent = '已入档';
+          slot.classList.add('done');
+          updateAdoptState();
+        } catch {
+          status.textContent = '后端睡着了';
+        } finally {
+          slot.classList.remove('busy');
+          input.value = '';
+        }
+      });
+    });
+
+    adoptBtn.addEventListener('click', () => {
+      if (!images.idle) return;
+      const record = {
+        name: (petName.value || '').trim() || '小伙伴',
+        size: Number(petSize.value) || 96,
+        images: { ...images },
+        adoptedAt: Date.now(),
+      };
+      if (adopt(record)) setStatus(`${record.name} 领养成功，已经开始溜达了！`, 'ready');
     });
 
     releaseBtn.addEventListener('click', () => {
@@ -193,6 +297,16 @@ import Base from '../../layouts/Base.astro';
       refreshCurrent();
       setStatus('送走了，常回家看看');
     });
+
+    async function shrinkImage(file: Blob, maxSide: number): Promise<Blob> {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      return await new Promise((resolve) => canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.9));
+    }
 
     async function downscale(blob: Blob, max: number): Promise<string> {
       const bitmap = await createImageBitmap(blob);
@@ -214,8 +328,72 @@ import Base from '../../layouts/Base.astro';
       gap: 28px;
     }
     .tool-heading h1 { margin: 0; font-family: var(--font-serif); font-size: clamp(36px, 5.5vw, 58px); line-height: 1.12; }
-    .tool-heading p:not(.eyebrow) { margin: 16px 0 0; color: var(--ink-soft); max-width: 560px; }
+    .tool-heading p:not(.eyebrow) { margin: 16px 0 0; color: var(--ink-soft); max-width: 620px; }
     .tool-heading .status-pill { transform: rotate(4deg); }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .section-head h2 { margin: 0; font-family: var(--font-serif); font-size: 24px; }
+    .section-head span { font: 700 9px/1 var(--font-mono); letter-spacing: .22em; color: var(--ink-soft); }
+
+    .preset-section { margin-bottom: 40px; }
+    .preset-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+    .preset-card { padding: 22px; }
+    .preset-main { display: flex; gap: 20px; align-items: center; }
+    .preset-main > img { width: 110px; height: 110px; object-fit: contain; flex: 0 0 auto; }
+    .preset-card h3 { margin: 0 0 6px; }
+    .preset-card p { margin: 0 0 14px; }
+    .preset-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+    .preset-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 2px;
+      border: 0;
+      background: none;
+      color: var(--teal);
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border-bottom: 2px dashed var(--teal);
+    }
+    .preset-toggle i { font-style: normal; transition: transform 160ms ease; }
+    .preset-toggle.open i { transform: rotate(180deg); }
+
+    .preset-states {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 2px dashed var(--line);
+    }
+    .state-chip { margin: 0; display: grid; gap: 6px; justify-items: center; }
+    .state-chip img,
+    .state-empty {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      border: 2px solid var(--teal);
+      border-radius: var(--radius-sm);
+      background:
+        linear-gradient(45deg, rgba(35,50,77,.03) 25%, transparent 25%, transparent 75%, rgba(35,50,77,.03) 75%),
+        var(--paper);
+      background-size: 14px 14px;
+      padding: 4px;
+    }
+    .state-empty { display: grid; place-items: center; border: 2px dashed var(--line); color: var(--ink-faint); }
+    .state-chip figcaption { font-size: 11px; font-weight: 700; font-family: var(--font-serif); text-align: center; }
+    .state-chip figcaption small { display: block; margin-top: 2px; color: var(--ink-faint); font-size: 9.5px; font-weight: 400; }
+    .state-chip.missing figcaption { color: var(--ink-faint); }
 
     .tool-workspace {
       overflow: hidden;
@@ -239,70 +417,66 @@ import Base from '../../layouts/Base.astro';
     .workspace-bar i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink); }
     .workspace-bar i:first-child { background: var(--teal); }
 
-    .workspace-grid { display: grid; grid-template-columns: 1fr 1fr; }
-    .input-panel, .output-panel { min-width: 0; padding: 26px; }
-    .input-panel { border-right: 2px dashed var(--line); }
-    .panel-label { margin-bottom: 16px; color: var(--ink); font-size: 13px; font-weight: 700; font-family: var(--font-serif); }
+    .custom-body { padding: 26px; }
+    .panel-label { margin-bottom: 18px; color: var(--ink); font-size: 13px; font-weight: 700; font-family: var(--font-serif); }
+    .panel-label.second { margin-top: 30px; }
     .panel-label span { margin-right: 8px; color: var(--red); font: 700 10px/1 var(--font-mono); }
 
-    .dropzone,
-    .pet-stage {
-      position: relative;
-      min-height: 330px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
+    .slot-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+    .slot { position: relative; display: grid; gap: 6px; justify-items: center; text-align: center; }
+    .slot strong { font-size: 12.5px; font-family: var(--font-serif); }
+    .slot strong em { color: var(--red); font-style: normal; }
+    .slot-status { color: var(--ink-faint); font-size: 10.5px; line-height: 1.5; min-height: 2.6em; }
+    .slot.done .slot-status { color: var(--teal); font-weight: 700; }
+    .slot.busy .slot-status { color: var(--gold); }
+
+    .slot-drop {
+      width: 100%;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
       border: 2px dashed var(--ink-faint);
       border-radius: var(--radius-sm);
       background:
         linear-gradient(45deg, rgba(35,50,77,.03) 25%, transparent 25%, transparent 75%, rgba(35,50,77,.03) 75%),
-        linear-gradient(45deg, rgba(35,50,77,.03) 25%, transparent 25%, transparent 75%, rgba(35,50,77,.03) 75%),
         var(--paper);
-      background-position: 0 0, 10px 10px;
-      background-size: 20px 20px;
+      background-size: 16px 16px;
+      cursor: pointer;
+      transition: border-color 160ms ease;
+      padding: 6px;
     }
-    .dropzone { cursor: pointer; transition: border-color 180ms ease, background 180ms ease; }
-    .dropzone:hover, .dropzone.dragging { border-color: var(--red); background-color: rgba(217, 79, 48, .045); }
-    .dropzone > *:not(.source-preview) { position: relative; z-index: 2; }
-    .upload-glyph { position: relative; width: 66px; height: 66px; margin-bottom: 20px; display: grid; place-items: center; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--card); transform: rotate(-3deg); }
-    .upload-glyph i { position: absolute; display: block; background: var(--ink); }
-    .upload-glyph i:nth-child(1) { width: 2px; height: 25px; }
-    .upload-glyph i:nth-child(2) { width: 13px; height: 2px; transform: translate(-4px, -8px) rotate(-40deg); }
-    .upload-glyph i:nth-child(3) { width: 13px; height: 2px; transform: translate(4px, -8px) rotate(40deg); }
-    .dropzone strong { max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-family: var(--font-serif); }
-    .dropzone > span:not(.upload-glyph):not(.choose-file) { margin-top: 7px; color: var(--ink-soft); font-size: 12px; }
-    .choose-file { margin-top: 18px; padding: 9px 14px; border: 2px solid var(--ink); border-radius: var(--radius); color: var(--ink); background: var(--card); font-size: 12px; font-weight: 700; box-shadow: 3px 3px 0 rgba(35,50,77,.16); }
-    .source-preview { position: absolute; inset: 0; z-index: 1; opacity: 0; background-position: center; background-size: cover; transition: opacity 180ms ease; }
-    .source-preview::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(245,239,226,.15), rgba(245,239,226,.85)); }
-    .source-preview.visible { opacity: .55; }
+    .slot-drop:hover { border-color: var(--red); }
+    .slot.done .slot-drop { border-style: solid; border-color: var(--teal); }
+    .slot-drop img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .slot-plus { color: var(--ink-faint); font-size: 26px; }
 
-    .action-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; }
+    .slot-clear {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--card);
+      color: var(--red);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .adopt-form { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 18px; align-items: end; }
+    .adopt-form label { display: grid; gap: 6px; color: var(--ink); font-size: 13px; font-weight: 700; font-family: var(--font-serif); }
+    .adopt-form input[type="text"] { padding: 10px 12px; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--card); font-size: 14px; }
+    .adopt-form input[type="range"] { accent-color: var(--red); }
+    .adopt-form .process-status { grid-column: 1 / -1; }
+
     .process-status { color: var(--ink-soft); font-size: 12.5px; }
     .process-status::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: var(--ink-faint); }
     .process-status[data-state="ready"] { color: var(--teal); }
     .process-status[data-state="ready"]::before { background: var(--teal); }
-    .process-status[data-state="running"] { color: var(--gold); }
-    .process-status[data-state="running"]::before { background: var(--gold); animation: pulse 1s infinite; }
     .process-status[data-state="error"] { color: var(--red); }
     .process-status[data-state="error"]::before { background: var(--red); }
-
-    .pet-preview { max-width: 78%; max-height: 240px; object-fit: contain; animation: bob 2.4s ease-in-out infinite; }
-    @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-
-    .adopt-form { display: grid; gap: 14px; margin-top: 18px; }
-    .adopt-form label { display: grid; gap: 6px; color: var(--ink); font-size: 13px; font-weight: 700; font-family: var(--font-serif); }
-    .adopt-form input[type="text"] {
-      padding: 10px 12px;
-      border: 2px solid var(--ink);
-      border-radius: var(--radius);
-      background: var(--card);
-      font-size: 14px;
-    }
-    .adopt-form input[type="text"]:focus-visible { outline-offset: 0; }
-    .adopt-form input[type="range"] { accent-color: var(--red); }
 
     .current-pet {
       margin-top: 22px;
@@ -325,16 +499,18 @@ import Base from '../../layouts/Base.astro';
     .tool-notes strong { display: block; margin-bottom: 2px; color: var(--ink); font-size: 12.5px; }
 
     @media (max-width: 860px) {
-      .workspace-grid { grid-template-columns: 1fr; }
-      .input-panel { border-right: 0; border-bottom: 2px dashed var(--line); }
+      .preset-grid { grid-template-columns: 1fr; }
+      .slot-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .adopt-form { grid-template-columns: 1fr; align-items: stretch; }
       .tool-notes { grid-template-columns: 1fr; }
     }
     @media (max-width: 620px) {
       .tool-heading { align-items: flex-start; flex-direction: column; }
-      .dropzone, .pet-stage { min-height: 280px; }
-      .input-panel, .output-panel { padding: 18px; }
-      .action-row { align-items: stretch; flex-direction: column; }
+      .slot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .preset-main { flex-direction: column; align-items: flex-start; }
+      .preset-states { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .current-pet { flex-direction: column; align-items: flex-start; }
+      .custom-body { padding: 18px; }
     }
   </style>
 </Base>

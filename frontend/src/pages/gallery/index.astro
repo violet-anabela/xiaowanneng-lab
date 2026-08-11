@@ -26,11 +26,11 @@ const photos = fs
 
   <div class="photo-wall">
     {photos.map((photo, i) => (
-      <a class="shot" href={photo.src} target="_blank" rel="noopener">
+      <button class="shot" type="button">
         <span class="tape" aria-hidden="true"></span>
         <img src={photo.src} alt={photo.caption} loading={i < 6 ? 'eager' : 'lazy'} />
         <span class="cap">{photo.caption}</span>
-      </a>
+      </button>
     ))}
   </div>
 
@@ -38,6 +38,44 @@ const photos = fs
     <i class="paw-i" aria-hidden="true"></i>
     胶卷持续冲洗中，新照片会陆续贴上来。
   </p>
+
+  <script>
+    // 点照片不给看原图——弹一句俏皮话就完事。
+    const lines = [
+      '看看就好，别想着摸',
+      '这张是本喵钦点的',
+      '铲屎官蹲了三天才拍到',
+      '表情什么意思？猫的事你不懂',
+      '已过审，可以骄傲地看',
+      '原图？没有，只有猫',
+      '随手一拍，别当真',
+      '喵：这张我很满意',
+      '再看也不会给你摸头的',
+      '盖爪认证，画质不议',
+    ];
+
+    let bubble: HTMLDivElement | null = null;
+    let hideTimer: ReturnType<typeof setTimeout>;
+
+    function showBubble(target: HTMLElement) {
+      if (!bubble) {
+        bubble = document.createElement('div');
+        bubble.className = 'gallery-bubble';
+        document.body.appendChild(bubble);
+      }
+      bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
+      const rect = target.getBoundingClientRect();
+      bubble.style.left = `${rect.left + rect.width / 2 + window.scrollX}px`;
+      bubble.style.top = `${rect.top + window.scrollY - 12}px`;
+      bubble.classList.add('show');
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => bubble?.classList.remove('show'), 1800);
+    }
+
+    document.querySelectorAll<HTMLButtonElement>('.shot').forEach((shot) => {
+      shot.addEventListener('click', () => showBubble(shot));
+    });
+  </script>
 
   <style>
     .photo-wall {
@@ -50,10 +88,14 @@ const photos = fs
     .shot {
       position: relative;
       display: block;
+      width: 100%;
       padding: 12px 12px 46px;
       background: var(--card);
       border: 1px solid var(--line);
       box-shadow: 0 14px 34px rgba(35, 50, 77, 0.18);
+      font: inherit;
+      text-align: inherit;
+      cursor: pointer;
       transition: transform 200ms ease, box-shadow 200ms ease;
     }
 
@@ -120,5 +162,34 @@ const photos = fs
       .photo-wall { grid-template-columns: 1fr; gap: 34px; }
       .shot:nth-child(3n + 2) { transform: rotate(1.6deg); }
     }
+  </style>
+
+  <style is:global>
+    .gallery-bubble {
+      position: absolute;
+      z-index: 40;
+      transform: translate(-50%, -100%) rotate(-1deg);
+      padding: 8px 12px;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: 3px 3px 0 rgba(35, 50, 77, 0.16);
+      color: var(--ink);
+      font: 14px/1.3 var(--font-hand);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .gallery-bubble::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border: 6px solid transparent;
+      border-top-color: var(--ink);
+    }
+    .gallery-bubble.show { opacity: 1; transform: translate(-50%, calc(-100% - 6px)) rotate(-1deg); }
   </style>
 </Base>
