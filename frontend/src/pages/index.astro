@@ -157,7 +157,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
       margin-top: 38px;
     }
 
-    .route { display: flex; align-items: center; margin-top: 56px; max-width: 480px; }
+    .route { display: flex; align-items: center; margin-top: 56px; }
     .route .pt { text-align: center; }
     .route .pt b {
       display: grid;
@@ -172,12 +172,17 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     }
     .route .pt span { display: block; margin-top: 8px; font-size: 12.5px; color: var(--ink-soft); }
     .route .leg {
-      flex: 1;
       height: 2px;
       margin: 0 8px 28px;
       background-image: linear-gradient(90deg, var(--ink) 55%, transparent 45%);
       background-size: 10px 2px;
     }
+    /* 两条虚线宽度是量出来的定值，不是 flex:1 平均分配——目的是让 02/03 圆圈的
+       左边缘正好落在"查看装备"/"领取补给"按钮的左边缘下方，跟上面按钮行的
+       不均匀间距对上（按钮宽度不等，均分的话中间和右边圆圈都会往右偏）。
+       改了按钮文案/字号后，这两个数字需要重新量。 */
+    .route .leg:nth-child(2) { flex: 0 0 82px; }
+    .route .leg:nth-child(4) { flex: 0 0 60px; }
 
     .polaroid-stack { position: relative; justify-self: center; }
     .polaroid {
