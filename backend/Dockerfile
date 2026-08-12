@@ -19,6 +19,8 @@ ENV PYTHONUNBUFFERED=1
 ENV U2NET_HOME=/data/models
 ENV HF_HOME=/data/hf
 ENV HF_ENDPOINT=https://hf-mirror.com
+# hf-mirror.com 官方推荐搭配 hf_transfer 做多线程分块下载，单线程直连很慢。
+ENV HF_HUB_ENABLE_HF_TRANSFER=1
 ENV PORT=8000
 
 # 已解析的 venv（含 fastapi/rembg/onnxruntime），构建期已锁定。

@@ -29,6 +29,7 @@ dependencies = [
     "einops>=0.8",
     "safetensors>=0.4",
     "huggingface-hub>=0.30",
+    "hf-transfer>=0.1",
     "tqdm>=4.66",
 ]
 

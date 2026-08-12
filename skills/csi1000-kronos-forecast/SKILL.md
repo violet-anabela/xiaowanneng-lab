@@ -26,7 +26,8 @@ git clone https://github.com/shiyu-coder/Kronos.git
 
 国内网络访问 huggingface.co 常年不稳定，若下载卡住或超时，设置环境变量
 `HF_ENDPOINT=https://hf-mirror.com` 后重试（huggingface_hub 官方支持的国内镜像，
-内容与接口和官方站一致）。
+内容与接口和官方站一致）。hf-mirror.com 单线程直连较慢，配合装好 `hf_transfer`
+包后设 `HF_HUB_ENABLE_HF_TRANSFER=1` 可开多线程分块下载，明显提速。
 
 任何一项缺失时停下来说明缺什么；不要静默换用别的模型或数据源。
 
