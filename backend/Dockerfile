@@ -20,10 +20,7 @@ RUN uv run --no-sync python -c "from rembg import new_session; new_session('${MO
 # hf-mirror.com（huggingface_hub 官方支持的镜像方案，接口与内容完全一致）。
 ENV HF_HOME=/repo/models/hf
 ENV HF_ENDPOINT=https://hf-mirror.com
-RUN uv run --no-sync python -c "\
-from huggingface_hub import snapshot_download; \
-snapshot_download('NeoQuasar/Kronos-Tokenizer-base'); \
-snapshot_download('NeoQuasar/Kronos-base')" \
+RUN uv run --no-sync python -c "from huggingface_hub import snapshot_download; snapshot_download('NeoQuasar/Kronos-Tokenizer-base'); snapshot_download('NeoQuasar/Kronos-base')" \
     && echo "kronos weights cached at ${HF_HOME}"
 
 # 运行期
