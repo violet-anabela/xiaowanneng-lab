@@ -126,7 +126,7 @@ GitHub 推送 `main` 自动部署。仓库根需有 `backend/Dockerfile`、`fron
 
 ### 模型权重
 
-`backend/Dockerfile` 在**构建期**下载并固定 `u2net` 模型到镜像（`U2NET_HOME`），运行时不临时联网。换模型改 `ARG MODEL_NAME`。
+`rembg`（抠图）与 Kronos/HF（观测站）的模型权重都在**运行期**首次调用时惰性下载，缓存到 `/data`（Zeabur 上挂载的持久卷，见 `U2NET_HOME`/`HF_HOME`）——不在构建期下载，因为构建环境的出网和生产容器不是一回事，构建期连 GitHub（rembg 模型源）或 hf-mirror.com 都可能超时。下载一次后常驻 `/data`，之后重启/重新部署直接读缓存。换模型改 `MODEL_NAME` 环境变量。
 
 ## 加新工具
 

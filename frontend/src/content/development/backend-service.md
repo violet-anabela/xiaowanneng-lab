@@ -63,13 +63,13 @@ Backend 是网站的**推理适配层**：接收 HTTP 上传、执行安全校�
 
 ## 模型生命周期
 
-`backend/Dockerfile` 在构建阶段下载 `isnet-general-use` 到 `/repo/models`，运行镜像将其复制到 `/app/models`，因此正式运行不依赖临时联网下载模型。
+`isnet-general-use`（rembg）与 Kronos/HF 权重都是运行期首次调用时惰性下载，缓存到 `/data/models` / `/data/hf`（持久卷）——不在构建阶段下载：构建环境的出网与生产容器不是一回事，实测构建期连 GitHub（rembg 模型源）和 hf-mirror.com 都可能超时。下载一次后常驻 `/data`，之后重启/重新部署直接读缓存，不再重复联网。
 
 应用启动时预热模型 session。预热失败不会杀死进程：`/livez` 仍然可用，而 `/readyz` 返回实际模型状态。推理由 `asyncio.to_thread` 放到线程执行，并由 semaphore 限制并发。
 
 ## 观测站（中证1000 Kronos 每日预测）
 
-- 调度：`app/observatory.py` 在 lifespan 中启动每日定时任务（默认 08:30 Asia/Shanghai，开盘前）；
+- 调度：`app/observatory.py` 在 lifespan 中启动每日定时任务（默认 08:00 Asia/Shanghai，开盘前）；
   启动时若从未生成过账本会先补跑一次。周末/节假日照常触发无害：脚本只认最新完整交易日，幂等空跑。
 - 执行：预测跑在**子进程**里（脚本与 `skills/csi1000-kronos-forecast` 同一份，构建时复制到
   `/app/observatory/`），torch 与权重只在运行的几分钟内占内存，跑完随进程退出全部释放。
