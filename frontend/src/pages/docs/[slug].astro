@@ -27,6 +27,36 @@ const { Content } = mod;
     </article>
   </div>
 
+  <script>
+    // 长文章加一段"本页导航"：扫正文里的 h2，插在第一个 h2 前面。
+    // 章节太少（含没有 h2 的短文档）就不加，没必要。
+    const article = document.querySelector('.doc-article');
+    const headings = article ? Array.from(article.querySelectorAll('h2')) : [];
+    if (headings.length >= 2) {
+      const nav = document.createElement('nav');
+      nav.className = 'doc-toc';
+      nav.setAttribute('aria-label', '本页导航');
+
+      const title = document.createElement('p');
+      title.className = 'doc-toc-title';
+      title.textContent = '本页导航';
+      nav.appendChild(title);
+
+      const ol = document.createElement('ol');
+      headings.forEach((h) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `#${h.id}`;
+        a.textContent = h.textContent;
+        li.appendChild(a);
+        ol.appendChild(li);
+      });
+      nav.appendChild(ol);
+
+      headings[0].parentNode?.insertBefore(nav, headings[0]);
+    }
+  </script>
+
   <style>
     .doc-sheet { position: relative; max-width: 850px; margin: 0 auto; }
     .doc-stamp {
@@ -52,5 +82,43 @@ const { Content } = mod;
     @media (max-width: 620px) {
       .doc-stamp { top: -18px; right: 0; width: 64px; height: 64px; font-size: 8.5px; }
     }
+  </style>
+
+  <style is:global>
+    .doc-toc {
+      margin: 28px 0 36px;
+      padding: 16px 22px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 2px 2px 0 rgba(35, 50, 77, 0.08);
+    }
+    .doc-toc-title {
+      margin: 0 0 10px;
+      font: 700 12px/1.2 var(--font-mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+    .doc-toc ol {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: toc;
+    }
+    .doc-toc li { counter-increment: toc; }
+    .doc-toc li::before {
+      content: counter(toc) '. ';
+      color: var(--ink-faint);
+      font: 15px/1.4 var(--font-mono);
+    }
+    .doc-toc a {
+      color: var(--ink-soft);
+      text-decoration: none;
+      font: 15px/1.4 var(--font-hand);
+    }
+    .doc-toc a:hover { color: var(--teal); text-decoration: underline; }
   </style>
 </Base>

@@ -419,21 +419,20 @@ python agent.py "把 sales.csv 做成七月销售报告"
 - **阶段 3（执行）**：`scripts/summarize.py` 跑完之后，进了上下文的到底只有
   stdout 那几行，还是把脚本源码也带进去了？
 
-这几个地方顺手加几行 `print()`（`agent.py` 里已经打开了 `verbose`，能看到
-三阶段的分界）就能看清楚，比读代码直观得多——毕竟整篇文章的结论就是
-"这套机制没什么魔法"，眼见为实。
+这几个地方顺手加几行 `print()` 就能看清楚——`agent.py` 里已经打开了 `verbose`，
+运行时能看到三阶段的分界。
 
 ---
 
 ## 附：延伸阅读
 
-- **Anthropic 官方工程博客**（最该先看）
-  `anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills`
-- **规范** —— 2025 年 12 月 18 日作为开放标准发布，`agentskills.io`。
+- **Anthropic 官方工程博客**（最该先看）——
+  [anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills](https://anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
+- **规范** —— 2025 年 12 月 18 日作为开放标准发布，[agentskills.io](https://agentskills.io)。
   目前四十多个平台支持，Claude、OpenAI Codex、Snowflake Cortex Code 都在内
-- **代码示例** —— `github.com/anthropics/claude-cookbooks/tree/main/skills`
-- **官方课程**（含 `allowed-tools` 限权、脚本免上下文等进阶项）
-  `anthropic.skilljar.com/introduction-to-agent-skills`
+- **代码示例** —— [github.com/anthropics/claude-cookbooks/tree/main/skills](https://github.com/anthropics/claude-cookbooks/tree/main/skills)
+- **官方课程**（含 `allowed-tools` 限权、脚本免上下文等进阶项）——
+  [anthropic.skilljar.com/introduction-to-agent-skills](https://anthropic.skilljar.com/introduction-to-agent-skills)
 
 ---
 

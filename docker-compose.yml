@@ -7,8 +7,9 @@
 # 启动：docker compose up --build
 # 访问：http://localhost:18080
 #
-# 注意：backend 在构建期下载 isnet-general-use（抠图，约180MB）与 Kronos 权重（经 hf-mirror.com，
-# 观测站预测用），构建时需要网络；无网络时后端镜像构建会失败。
+# 注意：isnet-general-use（抠图，约180MB）与 Kronos 权重（经 hf-mirror.com，观测站预测用）
+# 都是运行期首次调用时惰性下载到 /data（见 backend/Dockerfile），构建期不需要联网；
+# 首次真正用到对应功能时才会联网下载，之后常驻 /data 复用。
 services:
   backend:
     build:
