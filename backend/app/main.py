@@ -8,6 +8,7 @@ from .adapters.remove_background_api import process_upload
 from .middleware import RequestSizeLimitMiddleware
 from .observatory import router as observatory_router, scheduler_loop
 from .settings import settings
+from . import warehouse
 
 
 def _load_session():
@@ -16,23 +17,37 @@ def _load_session():
     return new_session(settings.model_name)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # 预热模型 session（失败不致命：本地无模型时 /livez 仍可用，/readyz 反映状态）。
+async def _warm_session(app: FastAPI) -> None:
     try:
-        app.state.session = _load_session()
+        app.state.session = await asyncio.to_thread(_load_session)
     except Exception as e:  # noqa: BLE001
         app.state.session = None
         print(f"[warn] model session not loaded at startup: {e}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 模型首次运行时惰性下载（见 backend/Dockerfile），权重不小、下载可能要几分钟；
+    # 放后台任务预热，不卡启动——否则整个服务（含 /livez 和观测站调度）都会被这一次
+    # 下载堵住。/readyz 和 /v1/remove-background 已经各自兜底：session 还没好会各自重试。
+    app.state.session = None
+    warm_task = asyncio.create_task(_warm_session(app))
     app.state.infer_sem = asyncio.Semaphore(settings.max_inference_concurrency)
     app.state.upload_sem = asyncio.Semaphore(settings.max_upload_concurrency)
     # 观测站每日预测调度（子进程执行，失败只记日志，不影响 API 服务）。
     observatory_task = None
     if settings.observatory_enabled:
         observatory_task = asyncio.create_task(scheduler_loop())
+    # 个人数据仓库同步（全市场 A 股日线，纯背景任务，不对外暴露接口）。
+    warehouse_task = None
+    if settings.warehouse_enabled:
+        warehouse_task = asyncio.create_task(warehouse.scheduler_loop())
     yield
+    warm_task.cancel()
     if observatory_task is not None:
         observatory_task.cancel()
+    if warehouse_task is not None:
+        warehouse_task.cancel()
     app.state.session = None
 
 

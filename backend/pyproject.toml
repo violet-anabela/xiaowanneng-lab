@@ -31,6 +31,8 @@ dependencies = [
     "huggingface-hub>=0.30",
     "hf-transfer>=0.1",
     "tqdm>=4.66",
+    # ---- 个人数据仓库（全市场 A 股日线）----
+    "baostock>=0.8",
 ]
 
 [tool.uv]

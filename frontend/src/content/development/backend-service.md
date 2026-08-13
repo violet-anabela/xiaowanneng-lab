@@ -60,12 +60,18 @@ Backend 是网站的**推理适配层**：接收 HTTP 上传、执行安全校�
 | `OBSERVATORY_ENABLED` | `1` | 设 `0` 可整体停用观测站调度 |
 | `KRONOS_DIR` | `/app/vendor/kronos` | vendored Kronos 模型代码位置 |
 | `OBSERVATORY_SCRIPT` | `/app/observatory/csi1000_live_forecast.py` | 预测脚本位置（与 Skill 同源） |
+| `WAREHOUSE_DIR` | `/data/warehouse` | 个人数据仓库 SQLite 文件目录（生产挂持久卷到 `/data`） |
+| `WAREHOUSE_SCRIPT` | `/app/warehouse/stock_daily_sync.py` | 同步脚本位置 |
+| `WAREHOUSE_BATCH_SIZE` | `300` | 每批处理的股票数 |
+| `WAREHOUSE_POLL_INTERVAL` | `15` | 存量历史没追平前，两批之间等待的秒数 |
+| `WAREHOUSE_SCHEDULE` | `16:30` | 追平之后，每天增量更新的时刻（Asia/Shanghai，收盘后） |
+| `WAREHOUSE_ENABLED` | `1` | 设 `0` 可整体停用数据仓库同步 |
 
 ## 模型生命周期
 
 `isnet-general-use`（rembg）与 Kronos/HF 权重都是运行期首次调用时惰性下载，缓存到 `/data/models` / `/data/hf`（持久卷）——不在构建阶段下载：构建环境的出网与生产容器不是一回事，实测构建期连 GitHub（rembg 模型源）和 hf-mirror.com 都可能超时。下载一次后常驻 `/data`，之后重启/重新部署直接读缓存，不再重复联网。
 
-应用启动时预热模型 session。预热失败不会杀死进程：`/livez` 仍然可用，而 `/readyz` 返回实际模型状态。推理由 `asyncio.to_thread` 放到线程执行，并由 semaphore 限制并发。
+应用启动时在后台任务里预热模型 session（`asyncio.to_thread`），不阻塞启动——首次下载权重可能要几分钟，放前台会连 `/livez` 和观测站调度一起卡住。预热期间 `/readyz` 与 `/v1/remove-background` 各自兜底：session 还没好就现场同步加载一次（等于把下载耗时转嫁到那次请求上），之后复用。推理本身仍由 `asyncio.to_thread` 放线程执行，并由 semaphore 限制并发。
 
 ## 观测站（中证1000 Kronos 每日预测）
 
@@ -73,11 +79,28 @@ Backend 是网站的**推理适配层**：接收 HTTP 上传、执行安全校�
   启动时若从未生成过账本会先补跑一次。周末/节假日照常触发无害：脚本只认最新完整交易日，幂等空跑。
 - 执行：预测跑在**子进程**里（脚本与 `skills/csi1000-kronos-forecast` 同一份，构建时复制到
   `/app/observatory/`），torch 与权重只在运行的几分钟内占内存，跑完随进程退出全部释放。
-- 权重：`NeoQuasar/Kronos-Tokenizer-base` 与 `NeoQuasar/Kronos-base` 在 Docker 构建期下载进
-  `HF_HOME`，运行期 `HF_HUB_OFFLINE=1` 离线复用；行情数据由 akshare 运行期在线抓取（国内源）。
+- 权重：`NeoQuasar/Kronos-Tokenizer-base` 与 `NeoQuasar/Kronos-base` 运行期首次调用时惰性下载
+  （见上方"模型生命周期"），常驻 `HF_HOME`；行情数据由 akshare 运行期在线抓取（国内源）。
 - 持久化：账本 `forecasts.csv` 是追加式的，必须把持久卷挂到 `/data`（Zeabur Volume），
   否则重新部署后历史准确率从零累计。
 - 模型代码：`backend/vendor/kronos/`（MIT，上游 shiyu-coder/Kronos，仅收录推理所需 `model/` 包）。
+
+## 个人数据仓库（全市场 A 股日线）
+
+- 这是 violet 自己攒着玩的数据仓库，**不对外暴露任何接口**——现在只是把数据存下来，
+  查询接口以后再单独做。跟观测站/抠图共用同一个 backend 服务是权衡后的选择（省一份基础设施），
+  代价是三者共享同一个容器/资源，任何一方出问题理论上都可能连累另外两个。
+- 数据源：`baostock`（免费、无需 token），只存不复权原始成交价（`adjustflag=3`）——
+  复权是分析时的派生选择，不是历史事实本身。
+- 范围：只到股票（baostock `type=1`），暂不含指数/ETF/可转债/基金净值/宏观数据，
+  以后要加再扩展。
+- 存储：SQLite，`WAREHOUSE_DIR/warehouse.db`（生产挂持久卷到 `/data`），三张表
+  `stocks`（股票名单，含已退市）/ `daily_bars`（日线）/ `sync_state`（每只股票同步进度）。
+- 调度：`app/warehouse.py` 按批调用 `backend/warehouse/stock_daily_sync.py`（子进程，
+  一批处理 `WAREHOUSE_BATCH_SIZE` 只股票）；股票名单几千只，一次全量回填要跑很久，
+  按批跑、进度记在 `sync_state` 表里，容器重启也不丢进度。存量历史没追平前每
+  `WAREHOUSE_POLL_INTERVAL` 秒跑一批；追平之后（某一批"nothing to sync"）退化成
+  每天 `WAREHOUSE_SCHEDULE`（默认收盘后）跑一次增量更新。
 
 ## 本地运行
 

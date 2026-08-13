@@ -39,6 +39,16 @@ class Settings:
     # 设 OBSERVATORY_ENABLED=0 可整体停用。
     observatory_schedule: str = os.getenv("OBSERVATORY_SCHEDULE", "08:00")
     observatory_enabled: bool = os.getenv("OBSERVATORY_ENABLED", "1") == "1"
+    # ---- 个人数据仓库（全市场 A 股日线，baostock，纯后台任务，不对外暴露接口）----
+    warehouse_dir: str = os.getenv("WAREHOUSE_DIR", "/data/warehouse")
+    warehouse_script: str = os.getenv("WAREHOUSE_SCRIPT", "/app/warehouse/stock_daily_sync.py")
+    # 每批处理的股票数；追平存量历史前会被短间隔反复调用（见 warehouse_poll_interval）。
+    warehouse_batch_size: int = int(os.getenv("WAREHOUSE_BATCH_SIZE", "300"))
+    # 还没追平时，两批之间等待的秒数。
+    warehouse_poll_interval: int = int(os.getenv("WAREHOUSE_POLL_INTERVAL", "15"))
+    # 追平之后，每天增量更新的时刻（Asia/Shanghai，收盘后，等当天数据落定）。
+    warehouse_schedule: str = os.getenv("WAREHOUSE_SCHEDULE", "16:30")
+    warehouse_enabled: bool = os.getenv("WAREHOUSE_ENABLED", "1") == "1"
 
 
 settings = Settings()
