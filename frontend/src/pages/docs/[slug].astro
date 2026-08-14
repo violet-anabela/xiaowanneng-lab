@@ -123,19 +123,21 @@ const { Content } = mod;
       text-transform: uppercase;
       color: var(--ink-faint);
     }
+    /* 不自动加序号——很多文档的小节标题自己就带了数字（"1. xxx"），
+       跟这里再加一遍 CSS counter 会变成"1. 1. xxx"，重复了。标题自己
+       有没有序号，交给标题文本本身决定。 */
     .doc-toc ol {
       display: grid;
       gap: 7px;
       margin: 0;
       padding: 0;
       list-style: none;
-      counter-reset: toc;
     }
-    .doc-toc li { counter-increment: toc; }
     .doc-toc li::before {
-      content: counter(toc) '. ';
+      content: '·';
+      display: inline-block;
+      width: 1em;
       color: var(--ink-faint);
-      font: 15px/1.4 var(--font-mono);
     }
     .doc-toc a {
       color: var(--ink-soft);
