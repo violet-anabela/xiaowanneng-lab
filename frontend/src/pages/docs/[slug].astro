@@ -21,18 +21,23 @@ const { Content } = mod;
 <Base title={mod.frontmatter?.title ?? slug}>
   <a class="back-link" href="/docs/"><span aria-hidden="true">←</span> 返回巡逻手账</a>
   <div class="doc-sheet">
-    <span class="doc-stamp" aria-hidden="true">FIELD<br />NOTE</span>
-    <article class="prose doc-article">
-      <Content />
-    </article>
+    <div class="doc-main">
+      <span class="doc-stamp" aria-hidden="true">FIELD<br />NOTE</span>
+      <article class="prose doc-article">
+        <Content />
+      </article>
+    </div>
+    <aside class="doc-toc-slot"></aside>
   </div>
 
   <script>
-    // 长文章加一段"本页导航"：扫正文里的 h2，插在第一个 h2 前面。
-    // 章节太少（含没有 h2 的短文档）就不加，没必要。
+    // 长文章加一段"本页导航"侧栏：扫正文里的 h2，塞进旁边的 aside。
+    // 章节太少（含没有 h2 的短文档）就不加，没必要；.doc-sheet 用 :has()
+    // 检测 aside 里有没有内容来决定要不要切成侧栏布局，纯 CSS，不用额外加类。
     const article = document.querySelector('.doc-article');
+    const slot = document.querySelector('.doc-toc-slot');
     const headings = article ? Array.from(article.querySelectorAll('h2')) : [];
-    if (headings.length >= 2) {
+    if (slot && headings.length >= 2) {
       const nav = document.createElement('nav');
       nav.className = 'doc-toc';
       nav.setAttribute('aria-label', '本页导航');
@@ -53,12 +58,28 @@ const { Content } = mod;
       });
       nav.appendChild(ol);
 
-      headings[0].parentNode?.insertBefore(nav, headings[0]);
+      slot.appendChild(nav);
     }
   </script>
 
   <style>
-    .doc-sheet { position: relative; max-width: 850px; margin: 0 auto; }
+    .doc-sheet { max-width: 850px; margin: 0 auto; }
+    .doc-main { position: relative; min-width: 0; }
+
+    /* 侧栏里塞了导航时（.doc-toc-slot 有内容），切成两栏、导航放左边；没有就
+       还是单栏居中，纯靠 :has() 判断，不用额外从脚本里切 class。
+       注意不能给 align-items: start——侧栏格子要跟正文一样高，sticky 才有
+       全程可以跟着滚动条走的空间，不然侧栏格子只有导航自己那么高，一下就到底了。 */
+    @media (min-width: 760px) {
+      .doc-sheet:has(.doc-toc) {
+        max-width: 1120px;
+        display: grid;
+        grid-template-columns: 200px minmax(0, 1fr);
+        gap: 32px;
+      }
+      .doc-toc-slot { order: -1; }
+    }
+
     .doc-stamp {
       position: absolute;
       top: -22px;
@@ -85,6 +106,8 @@ const { Content } = mod;
   </style>
 
   <style is:global>
+    .doc-toc-slot:empty { display: none; }
+
     .doc-toc {
       margin: 28px 0 36px;
       padding: 16px 22px;
@@ -120,5 +143,11 @@ const { Content } = mod;
       font: 15px/1.4 var(--font-hand);
     }
     .doc-toc a:hover { color: var(--teal); text-decoration: underline; }
+
+    /* 桌面下侧栏导航跟着滚动条走；窄屏（.doc-sheet 没切两栏时）就是正文里
+       普通的一块，随文档往下走。 */
+    @media (min-width: 760px) {
+      .doc-toc { position: sticky; top: 28px; margin: 0; max-height: calc(100vh - 56px); overflow-y: auto; }
+    }
   </style>
 </Base>
