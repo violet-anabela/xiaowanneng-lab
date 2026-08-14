@@ -58,10 +58,26 @@ import Base from '../../layouts/Base.astro';
         </div>
         <figcaption>最新推演 · 中位数与路径区间（划过看具体数值）</figcaption>
       </figure>
-      <figure class="obs-polaroid">
-        <img id="chart-eval" alt="历史预测与真实值对比图" />
-        <figcaption>复盘 · 预测与真实值对照</figcaption>
+      <figure class="obs-polaroid obs-chart-card">
+        <div class="obs-chart-wrap">
+          <svg id="chart-eval" viewBox="0 0 640 360" role="img" aria-label="历史预测与真实值对照图，可悬停查看具体日期和数值"></svg>
+          <div class="obs-tooltip" id="chart-eval-tooltip" role="tooltip"></div>
+        </div>
+        <figcaption>复盘 · 预测与真实值对照（划过看具体数值）</figcaption>
       </figure>
+    </section>
+
+    <section class="obs-breakdown-wrap">
+      <div class="section-head"><h2>分组战绩：把握大的时候准不准</h2><span>BY CONFIDENCE</span></div>
+      <div class="table-scroll">
+        <table class="obs-table">
+          <thead>
+            <tr><th>分组</th><th>已结算次数</th><th>方向准确率</th><th>点位平均绝对误差</th></tr>
+          </thead>
+          <tbody id="obs-breakdown-rows"></tbody>
+        </table>
+      </div>
+      <p class="obs-hint">"高置信度"是模型 30 条路径里 ≥90% 一致同一个方向的情况；"不确定"是路径分歧较大、方向一致度没到 90% 的情况。样本数太少时百分比会大起大落，先看个大概。</p>
     </section>
 
     <section class="obs-table-wrap">
@@ -201,6 +217,38 @@ import Base from '../../layouts/Base.astro';
         $('s-hint').textContent = '第一批预测还没到结算日，战绩栏先空着。';
       }
 
+      // 分组战绩：全部 / 高置信度 / 不确定——用后端已经算好的 signal 字段分组，
+      // 不用自己再定一套置信度阈值。
+      const breakdownBody = $('obs-breakdown-rows');
+      breakdownBody.innerHTML = '';
+      if (settled.length) {
+        const isTrue = (v: string) => v === 'True' || v === '1.0';
+        const groups: [string, Record<string, string>[]][] = [
+          ['全部（通用效果）', settled],
+          ['高置信度（≥90% 一致）', settled.filter((r) => r.signal === 'high-confidence up' || r.signal === 'high-confidence down')],
+          ['不确定（分歧较大）', settled.filter((r) => r.signal === 'uncertain')],
+        ];
+        for (const [label, group] of groups) {
+          const tr = document.createElement('tr');
+          if (!group.length) {
+            tr.innerHTML = `<td>${label}</td><td colspan="3">还没有这类样本</td>`;
+          } else {
+            const gCorrect = group.filter((r) => isTrue(r.direction_correct)).length;
+            const gMae = group.reduce((sum, r) => sum + Number(r.absolute_error || 0), 0) / group.length;
+            tr.innerHTML =
+              `<td>${label}</td>` +
+              `<td>${group.length} 次</td>` +
+              `<td>${pct(gCorrect / group.length)}</td>` +
+              `<td>${fmt(gMae)} 点</td>`;
+          }
+          breakdownBody.appendChild(tr);
+        }
+      } else {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="4">还没有结算数据，先攒着</td>`;
+        breakdownBody.appendChild(tr);
+      }
+
       // 未来路径表
       const tbody = $('obs-rows');
       tbody.innerHTML = '';
@@ -221,8 +269,7 @@ import Base from '../../layouts/Base.astro';
         .slice(-90)
         .map((b) => ({ date: new Date(b.timestamps + 'T00:00:00'), close: Number(b.close) }));
       drawInteractiveChart(history, latest, originClose, first.origin_date);
-
-      ($('chart-eval') as HTMLImageElement).src = `${API}/v1/observatory/evaluation-history.png?t=${status.updated_at}`;
+      drawEvalChart(settled);
 
       $('obs-loading').hidden = true;
       $('obs-main').hidden = false;
@@ -398,6 +445,170 @@ import Base from '../../layouts/Base.astro';
       new ResizeObserver(draw).observe(svg.parentElement!);
     }
 
+    // ---- 复盘图：已结算的预测 vs 真实值，跟上面那张交互图同一套做法 ----
+    function drawEvalChart(settled: Record<string, string>[]) {
+      const svg = $('chart-eval') as unknown as SVGSVGElement;
+      const tip = $('chart-eval-tooltip');
+      const NS = 'http://www.w3.org/2000/svg';
+      const style = getComputedStyle(document.documentElement);
+      const col = (name: string) => style.getPropertyValue(name).trim() || '#23324d';
+      const ink = col('--ink');
+      const inkSoft = col('--ink-soft');
+      const inkFaint = col('--ink-faint');
+      const red = col('--red');
+      const teal = col('--teal');
+      const line = col('--line');
+
+      function el(name: string, attrs: Record<string, string | number> = {}) {
+        const node = document.createElementNS(NS, name);
+        for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+        return node;
+      }
+
+      function empty(msg: string) {
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+        const box = svg.getBoundingClientRect();
+        const W = Math.max(320, box.width || 640);
+        const H = Math.max(280, box.height || 360);
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+        const t = el('text', { x: W / 2, y: H / 2, 'text-anchor': 'middle', fill: inkFaint, 'font-size': 13 });
+        t.textContent = msg;
+        svg.append(t);
+      }
+
+      if (!settled.length) {
+        empty('还没有结算的预测，攒够数据就有图看了');
+        return;
+      }
+
+      const points = settled
+        .map((r) => ({
+          date: new Date(r.target_date + 'T00:00:00'),
+          median: Number(r.calibrated_median_close),
+          p10: Number(r.calibrated_p10_close),
+          p90: Number(r.calibrated_p90_close),
+          actual: Number(r.actual_close),
+        }))
+        .sort((a, b) => +a.date - +b.date);
+
+      function draw() {
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+        const box = svg.getBoundingClientRect();
+        const W = Math.max(320, box.width || 640);
+        const H = Math.max(280, box.height || 360);
+        const m = { t: 16, r: 16, b: 34, l: 58 };
+        const iw = W - m.l - m.r;
+        const ih = H - m.t - m.b;
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+        const t0 = +points[0].date;
+        const t1 = +points[points.length - 1].date;
+        const tSpan = t1 - t0 || 1;
+        const single = points.length === 1;
+        const ys = points.flatMap((d) => [d.p10, d.p90, d.median, d.actual]);
+        const yMax = Math.max(...ys);
+        const yMin = Math.min(...ys);
+        const pad = (yMax - yMin) * 0.1 || 1;
+        const x = (d: Date) => (single ? m.l + iw / 2 : m.l + ((+d - t0) / tSpan) * iw);
+        const y = (v: number) => m.t + ((yMax + pad - v) / (yMax - yMin + 2 * pad)) * ih;
+
+        for (let i = 0; i <= 4; i++) {
+          const yy = m.t + (ih * i) / 4;
+          const val = yMax + pad - ((yMax - yMin + 2 * pad) * i) / 4;
+          svg.append(el('line', { x1: m.l, x2: W - m.r, y1: yy, y2: yy, stroke: line, 'stroke-width': 1 }));
+          const t = el('text', { x: m.l - 8, y: yy + 4, 'text-anchor': 'end', fill: inkFaint, 'font-size': 10 });
+          t.textContent = Math.round(val).toLocaleString('zh-CN');
+          svg.append(t);
+        }
+        const ticks = Math.max(1, Math.min(points.length, W < 480 ? 3 : 6));
+        for (let i = 0; i < ticks; i++) {
+          const tt = new Date(t0 + (tSpan * i) / Math.max(1, ticks - 1));
+          const xx = x(tt);
+          const t = el('text', {
+            x: xx,
+            y: H - 10,
+            'text-anchor': i === 0 ? 'start' : i === ticks - 1 ? 'end' : 'middle',
+            fill: inkFaint,
+            'font-size': 10,
+          });
+          t.textContent = tt.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+          svg.append(t);
+        }
+
+        if (!single) {
+          const bandPath =
+            points.map((d, i) => `${i ? 'L' : 'M'}${x(d.date)},${y(d.p90)}`).join(' ') +
+            ' ' +
+            points.slice().reverse().map((d) => `L${x(d.date)},${y(d.p10)}`).join(' ') +
+            'Z';
+          svg.append(el('path', { d: bandPath, fill: teal, opacity: 0.16, stroke: 'none' }));
+
+          const linePath = (get: (d: (typeof points)[0]) => number) =>
+            points.map((d, i) => `${i ? 'L' : 'M'}${x(d.date)},${y(get(d))}`).join(' ');
+          svg.append(el('path', { d: linePath((d) => d.median), fill: 'none', stroke: red, 'stroke-width': 2.4, 'stroke-linejoin': 'round' }));
+          svg.append(el('path', { d: linePath((d) => d.actual), fill: 'none', stroke: ink, 'stroke-width': 2.2, 'stroke-linejoin': 'round' }));
+        }
+        for (const d of points) {
+          svg.append(el('circle', { cx: x(d.date), cy: y(d.actual), r: 3.4, fill: ink, stroke: '#fffdf7', 'stroke-width': 1.4 }));
+          svg.append(el('circle', { cx: x(d.date), cy: y(d.median), r: 3.4, fill: red, stroke: '#fffdf7', 'stroke-width': 1.4 }));
+        }
+
+        // 图例
+        const legend = [
+          { c: ink, t: '真实收盘' },
+          { c: red, t: '预测中位数' },
+        ];
+        legend.forEach((it, i) => {
+          const ly = m.t + 4 + i * 15;
+          svg.append(el('circle', { cx: m.l + 6, cy: ly, r: 4, fill: it.c }));
+          const t = el('text', { x: m.l + 14, y: ly + 4, fill: inkSoft, 'font-size': 10 });
+          t.textContent = it.t;
+          svg.append(t);
+        });
+
+        const guide = el('line', { y1: m.t, y2: H - m.b, stroke: teal, 'stroke-width': 1, 'stroke-dasharray': '3 3', visibility: 'hidden' });
+        svg.append(guide);
+
+        const hover = el('rect', { x: m.l, y: m.t, width: iw, height: ih, fill: 'transparent' });
+        (hover as SVGElement).style.cursor = 'crosshair';
+        hover.addEventListener('pointermove', (e: any) => {
+          const r = svg.getBoundingClientRect();
+          const px = ((e.clientX - r.left) * W) / r.width;
+          const clamped = Math.max(m.l, Math.min(W - m.r, px));
+          const targetDate = new Date(t0 + ((clamped - m.l) / iw) * tSpan);
+          const nearest = points.reduce((a, b) => (Math.abs(+b.date - +targetDate) < Math.abs(+a.date - +targetDate) ? b : a));
+          const xx = x(nearest.date);
+          guide.setAttribute('x1', String(xx));
+          guide.setAttribute('x2', String(xx));
+          guide.setAttribute('visibility', 'visible');
+
+          const err = nearest.actual - nearest.median;
+          const dateLabel = nearest.date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+          const body =
+            `<div class="row"><span>预测中位数</span><b>${fmt(nearest.median)}</b></div>` +
+            `<div class="row"><span>真实收盘</span><b>${fmt(nearest.actual)}</b></div>` +
+            `<div class="row"><span>误差</span><b class="${err >= 0 ? 'val-up' : 'val-down'}">${err >= 0 ? '+' : ''}${fmt(err)}</b></div>` +
+            `<div class="row"><span>路径区间</span><b>${fmt(nearest.p10)} ～ ${fmt(nearest.p90)}</b></div>`;
+          tip.innerHTML = `<strong>${dateLabel}</strong>${body}`;
+          (tip as HTMLElement).style.display = 'block';
+          const tipW = (tip as HTMLElement).offsetWidth;
+          const tipH = (tip as HTMLElement).offsetHeight;
+          const left = Math.min(box.width - tipW - 8, Math.max(8, e.clientX - r.left + 14));
+          const top = Math.max(8, e.clientY - r.top - tipH - 12);
+          (tip as HTMLElement).style.left = left + 'px';
+          (tip as HTMLElement).style.top = top + 'px';
+        });
+        hover.addEventListener('pointerleave', () => {
+          (tip as HTMLElement).style.display = 'none';
+          guide.setAttribute('visibility', 'hidden');
+        });
+        svg.append(hover);
+      }
+
+      draw();
+      new ResizeObserver(draw).observe(svg.parentElement!);
+    }
+
     load();
   </script>
 
@@ -505,6 +716,8 @@ import Base from '../../layouts/Base.astro';
     .obs-tooltip .row b.val-up { color: var(--red); }
     .obs-tooltip .row b.val-down { color: var(--teal); }
 
+    .obs-breakdown-wrap { margin-top: 44px; }
+    .obs-breakdown-wrap .obs-hint { margin-top: 14px; }
     .obs-table-wrap { margin-top: 44px; }
     .section-head {
       display: flex;
