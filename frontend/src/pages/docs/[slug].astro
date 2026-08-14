@@ -145,9 +145,17 @@ const { Content } = mod;
     .doc-toc a:hover { color: var(--teal); text-decoration: underline; }
 
     /* 桌面下侧栏导航跟着滚动条走；窄屏（.doc-sheet 没切两栏时）就是正文里
-       普通的一块，随文档往下走。 */
+       普通的一块，随文档往下走。
+       站点顶部 .site-header 自己也是 sticky（global.css），实测高度 ~114px，
+       导航的 sticky top 要让开这一块，不然会被吸顶的站点导航挡住/叠在一起。 */
     @media (min-width: 760px) {
-      .doc-toc { position: sticky; top: 28px; margin: 0; max-height: calc(100vh - 56px); overflow-y: auto; }
+      .doc-toc {
+        position: sticky;
+        top: 134px;
+        margin: 0;
+        max-height: calc(100vh - 134px - 24px);
+        overflow-y: auto;
+      }
     }
   </style>
 </Base>
