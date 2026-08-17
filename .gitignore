@@ -229,3 +229,5 @@ __marimo__/
 
 # 规划文档：我(WorkBuddy)与 GPT 来回打磨方案的草稿，非站点交付物，不进 git
 /proposals/
+
+docs/
