@@ -4,9 +4,22 @@
     {
       "name": "frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "cwd": "frontend",
       "port": 4321
+    },
+    {
+      "name": "hitl",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": [
+        "docs.langchain.deepagent.humaninloop_server:app",
+        "--port",
+        "8099"
+      ],
+      "port": 8099
     }
   ]
 }

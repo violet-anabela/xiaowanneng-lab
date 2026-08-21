@@ -93,6 +93,37 @@ import Base from '../../layouts/Base.astro';
     </section>
   </div>
 
+  <section class="obs-logic">
+    <div class="section-head"><h2>咪是怎么算的</h2><span>HOW THE WATCH WORKS</span></div>
+    <ol class="logic-steps">
+      <li>
+        <span class="step-no">01</span>
+        <div><strong>收数据</strong><p>每个交易日开盘前自动去抓中证1000的最新日线，取最近 40 根当模型的"记忆"。</p></div>
+      </li>
+      <li>
+        <span class="step-no">02</span>
+        <div><strong>沙盘推演</strong><p>Kronos 模型顺着这段行情往后推 30 条可能的走法，每条都编到未来 12 个交易日。采样时故意留了点随机性（温度 0.4，top-p 0.9），让路径自然散开。</p></div>
+      </li>
+      <li>
+        <span class="step-no">03</span>
+        <div><strong>数路径</strong><p>每个目标日把 30 条路径的收盘价排一排，中位数当预测点位，10% 到 90% 分位当区间，再数一数几条在涨、几条在跌。</p></div>
+      </li>
+      <li>
+        <span class="step-no">04</span>
+        <div><strong>掐信号</strong><p>30 条路径里九成以上往同一个方向走，才敢盖"高置信度"的戳，其余一律老实标"不确定"。</p></div>
+      </li>
+      <li>
+        <span class="step-no">05</span>
+        <div><strong>反思环节</strong><p>攒满 30 个已结算样本后，用历史预测的平均偏差把展示点位平移校正。方向信号不跟着动，免得校正连态度也一起改了。</p></div>
+      </li>
+      <li>
+        <span class="step-no">06</span>
+        <div><strong>记账</strong><p>账本只增不改。到了结算日回填真实收盘，方向对错、差了多少点，全摊在上面的战绩表里，不藏。</p></div>
+      </li>
+    </ol>
+    <p class="obs-hint">这套流程原样打包成了补给包，想在自己电脑上跑，去<a href="/skills/">小鱼干页</a>领 csi1000-kronos-forecast。</p>
+  </section>
+
   <aside class="obs-memo">
     <span class="pin" aria-hidden="true"></span>
     <strong>球球的免责声明</strong>
@@ -745,6 +776,32 @@ import Base from '../../layouts/Base.astro';
     .obs-table td { padding: 9px 12px; border-bottom: 1px dashed var(--line); white-space: nowrap; }
     .obs-table tr:first-child td { background: rgba(217, 161, 59, 0.07); font-weight: 700; }
 
+    .obs-logic { margin-top: 44px; }
+    .logic-steps {
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px 26px;
+      list-style: none;
+    }
+    .logic-steps li { display: flex; gap: 13px; }
+    .step-no {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--card);
+      font: 700 12px/1 var(--font-mono);
+      transform: rotate(-4deg);
+    }
+    .logic-steps strong { font-family: var(--font-serif); font-size: 15.5px; }
+    .logic-steps p { margin: 6px 0 0; color: var(--ink-soft); font-size: 12.5px; line-height: 1.8; }
+    .obs-logic .obs-hint a { color: var(--teal); text-decoration: underline; text-underline-offset: 3px; }
+
     .obs-memo {
       position: relative;
       width: min(560px, 100%);
@@ -770,6 +827,10 @@ import Base from '../../layouts/Base.astro';
 
     @media (max-width: 860px) {
       .obs-latest, .obs-charts { grid-template-columns: 1fr; }
+      .logic-steps { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .logic-steps { grid-template-columns: 1fr; }
     }
     @media (max-width: 620px) {
       .obs-facts { grid-template-columns: 1fr; }

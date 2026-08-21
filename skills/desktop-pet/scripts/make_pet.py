@@ -8,7 +8,7 @@
         --drag drag.png --click click.png --name 球球 -o my-pet.html
 
 输入应当是已经去除背景的 PNG（透明通道）。抠图可以用 remove-background Skill，
-或小完能实验室的在线工具（https://violet.hk.cn/tools/remove-background）。
+或小完能实验室的在线工具（https://violet.cn.com/tools/remove-background）。
 产物是一个自包含 HTML：图片以 base64 内嵌，双击浏览器打开即可。
 """
 

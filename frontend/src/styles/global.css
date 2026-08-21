@@ -210,19 +210,6 @@ img { max-width: 100%; }
 }
 .footer-sign small { display: block; margin-top: 4px; font: 700 8.5px/1.5 var(--font-mono); letter-spacing: 0.14em; color: var(--ink-faint); }
 
-.footer-beian {
-  width: min(1120px, 100%);
-  margin: 14px auto 0;
-  text-align: center;
-}
-.footer-beian a {
-  color: var(--ink-faint);
-  font: 700 11px/1.6 var(--font-mono);
-  letter-spacing: 0.04em;
-  text-decoration: none;
-}
-.footer-beian a:hover { color: var(--ink-soft); text-decoration: underline; }
-
 /* ---------- 标题区 ---------- */
 
 .eyebrow {

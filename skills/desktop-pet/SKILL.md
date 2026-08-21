@@ -23,7 +23,7 @@ description: 把一张照片做成会溜达、会打盹、能拖拽的单文件�
 **第 1 步：准备透明背景图**。如果用户给的是普通照片，先抠图：
 
 - 有 remove-background Skill 时优先用它：`python scripts/remove_bg.py photo.jpg -o cutout.png`
-- 或引导用户使用在线工具：https://violet.hk.cn/tools/remove-background
+- 或引导用户使用在线工具：https://violet.cn.com/tools/remove-background
 
 **第 2 步：生成桌宠**（单图版最简单，也可以给不同状态配不同的图）：
 
