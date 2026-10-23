@@ -1,20 +1,30 @@
 ---
 import fs from 'node:fs';
 import Base from '../../layouts/Base.astro';
+import ReelFrame from '../../components/ReelFrame.astro';
 
-// 猫片墙的内容来自 public/gallery/ 目录：往里扔图片就会自动上墙，
+// 猫片墙的内容来自 public/gallery/ 目录：往里扔图片或视频就会自动上墙，
 // 文件名（不含扩展名）会被当作手写配文显示；可选的「数字-」前缀只用来排序，
 // 不会显示出来（例：`03-十一老师开课了.jpg` → 排第 3，配文"十一老师开课了"）。
+// 视频可以在 public/gallery/posters/ 放一张同名 .jpg 当封面，没有的话就是黑底。
 // 路径相对 astro 进程的工作目录（frontend/），不能用 import.meta.url——打包后会指向 dist。
-const exts = /\.(jpe?g|png|webp|gif)$/i;
+const exts = /\.(jpe?g|png|webp|gif|mp4|webm)$/i;
+const videoExts = /\.(mp4|webm)$/i;
+const posters = new Set(fs.readdirSync('public/gallery/posters'));
 const photos = fs
   .readdirSync('public/gallery')
   .filter((name) => exts.test(name))
   .sort()
-  .map((name) => ({
-    src: `/gallery/${encodeURIComponent(name)}`,
-    caption: name.replace(exts, '').replace(/^\d+[-_ ]*/, ''),
-  }));
+  .map((name) => {
+    const base = name.replace(exts, '');
+    const poster = `${base}.jpg`;
+    return {
+      src: `/gallery/${encodeURIComponent(name)}`,
+      caption: base.replace(/^\d+[-_ ]*/, ''),
+      isVideo: videoExts.test(name),
+      poster: posters.has(poster) ? `/gallery/posters/${encodeURIComponent(poster)}` : undefined,
+    };
+  });
 ---
 
 <Base title="猫片墙 · 小完能实验室" description="考察队随队摄影档案：两只咪的各种照片。">
@@ -25,13 +35,19 @@ const photos = fs
   </header>
 
   <div class="photo-wall">
-    {photos.map((photo, i) => (
+    {photos.map((photo, i) => (photo.isVideo ? (
+      <figure class="shot shot-video">
+        <span class="tape" aria-hidden="true"></span>
+        <ReelFrame src={photo.src} poster={photo.poster} label={photo.caption} />
+        <figcaption class="cap">{photo.caption}<span class="reel" aria-hidden="true">▶ 动图</span></figcaption>
+      </figure>
+    ) : (
       <button class="shot" type="button">
         <span class="tape" aria-hidden="true"></span>
         <img src={photo.src} alt={photo.caption} loading={i < 6 ? 'eager' : 'lazy'} />
         <span class="cap">{photo.caption}</span>
       </button>
-    ))}
+    )))}
   </div>
 
   <p class="wall-note">
@@ -72,7 +88,8 @@ const photos = fs
       hideTimer = setTimeout(() => bubble?.classList.remove('show'), 1800);
     }
 
-    document.querySelectorAll<HTMLButtonElement>('.shot').forEach((shot) => {
+    // 只给照片加俏皮话，视频那张要留着让人点播放。
+    document.querySelectorAll<HTMLButtonElement>('button.shot').forEach((shot) => {
       shot.addEventListener('click', () => showBubble(shot));
     });
   </script>
@@ -115,6 +132,23 @@ const photos = fs
       aspect-ratio: 1;
       object-fit: cover;
       display: block;
+    }
+
+    /* 视频不裁成方的：画面里带字幕，按 16:9 整张放上墙 */
+    .shot-video {
+      margin: 0;
+      cursor: default;
+      /* 16:9 比照片矮，让相框贴着画面收口，别被同排的方片撑出一大块白 */
+      align-self: start;
+    }
+
+
+    .shot-video:hover { transform: rotate(0deg) scale(1.01); }
+
+    .cap .reel {
+      margin-left: 8px;
+      color: var(--ink-faint);
+      font-size: 13px;
     }
 
     .shot .cap {

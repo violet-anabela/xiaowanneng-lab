@@ -5,8 +5,18 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /repo
 
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN pip install --no-cache-dir uv \
-    && uv sync --frozen --no-dev --no-install-project
+# uv.lock 里的轮子地址写死 files.pythonhosted.org，国内机器上基本拉不动（实测 0 B/s）。
+# 这里用 uv export 离线导出锁定清单，再从 PIP_INDEX_URL 镜像安装；torch 单独走 PyTorch CPU 源
+# （linux 默认 PyPI 轮子捆绑 CUDA，体积 2GB+）。海外构建可传 --build-arg PIP_INDEX_URL=https://pypi.org/simple。
+ARG PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
+ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir -i "$PIP_INDEX_URL" uv \
+    && uv export --frozen --no-dev --no-emit-project --no-hashes -o /tmp/req.txt \
+    && TORCH_VER=$(sed -nE "s/^torch==([0-9.]+)\+cpu.*/\1/p" /tmp/req.txt | head -1) \
+    && grep -v "^torch==" /tmp/req.txt > /tmp/req-notorch.txt \
+    && uv venv /repo/.venv \
+    && UV_HTTP_TIMEOUT=300 uv pip install --python /repo/.venv/bin/python --index-url "$PIP_INDEX_URL" -r /tmp/req-notorch.txt \
+    && UV_HTTP_TIMEOUT=300 uv pip install --python /repo/.venv/bin/python --index-url "$TORCH_INDEX_URL" "torch==$TORCH_VER"
 
 # 运行期
 FROM python:3.12-slim AS runtime

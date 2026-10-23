@@ -1,6 +1,7 @@
 ---
 title: LangSmith 是什么，什么时候该用它
 description: 面向刚接触 LLM 应用可观测性的开发者，示例用智谱 GLM，附可下载的完整参考代码
+category: 周边工具
 order: 4
 ---
 

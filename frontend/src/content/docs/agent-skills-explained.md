@@ -1,6 +1,7 @@
 ---
 title: Agent Skills 原理详解
 description: 所谓"调用 skill"，就是把一个 markdown 文件读进上下文——没有专门的 API，没有检索引擎
+category: Agent 通用
 order: 2
 ---
 

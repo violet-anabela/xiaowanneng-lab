@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { tools } from '../data/tools';
 import manifest from '../data/skills-manifest.json';
+import ReelFrame from '../components/ReelFrame.astro';
 
 const availableTools = tools.filter((tool) => tool.status === 'available').length;
 const skillCount = Object.keys(manifest.skills).length;
@@ -34,11 +35,15 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     </div>
 
     <div class="polaroid-stack">
-      <div class="polaroid">
+      <figure class="polaroid">
         <span class="tape" aria-hidden="true"></span>
-        <img src="/assets/lab-poster-xiaowanneng-colors.png" alt="小完能实验室的两只咪" width="1254" height="1254" />
-        <span class="cap">考察队全体成员 · 出发前合影</span>
-      </div>
+        <ReelFrame
+          src="/gallery/00-十一的绝世好猫认证.mp4"
+          poster="/gallery/posters/00-十一的绝世好猫认证.jpg"
+          label="十一的绝世好猫认证"
+        />
+        <figcaption class="cap">十一 · 绝世好猫认证现场</figcaption>
+      </figure>
       <div class="stamp" aria-hidden="true">XWN·LAB<br />APPROVED<br />★ 2026 ★</div>
       <div class="memo" aria-hidden="true">球球负责出主意，十一负责把挡板抠开。</div>
     </div>
@@ -80,6 +85,9 @@ const pad = (n: number) => n.toString().padStart(2, '0');
 
   <section class="crew">
     <div class="section-head">
+      <span class="crew-emblem" aria-hidden="true">
+        <img src="/assets/lab-poster-xiaowanneng-colors.png" alt="" width="1254" height="1254" />
+      </span>
       <h2>考察队成员档案</h2>
       <a class="crew-more" href="/gallery/"><i class="paw-i" aria-hidden="true"></i> 更多猫片 →</a>
     </div>
@@ -186,6 +194,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
 
     .polaroid-stack { position: relative; justify-self: center; }
     .polaroid {
+      margin: 0; /* figure 的浏览器默认外边距要清掉 */
       width: min(360px, 82vw);
       padding: 14px 14px 54px;
       background: var(--card);
@@ -202,6 +211,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
       font: 15px/1 var(--font-hand);
       color: var(--ink-soft);
     }
+
     .tape {
       position: absolute;
       top: -14px; left: 50%;
@@ -213,6 +223,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     }
     .stamp {
       position: absolute;
+      pointer-events: none; /* 纯装饰，别挡住底下视频卡的按钮 */
       right: -26px; top: -28px;
       width: 108px; height: 108px;
       border: 3px double var(--red);
@@ -229,6 +240,7 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     }
     .memo {
       position: absolute;
+      pointer-events: none; /* 同上，装饰不接管点击 */
       bottom: -52px; left: -38px;
       width: 172px;
       padding: 14px;
@@ -252,6 +264,24 @@ const pad = (n: number) => n.toString().padStart(2, '0');
     }
     .section-head h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(26px, 4vw, 34px); }
     .section-head span { font: 700 10px/1 var(--font-mono); letter-spacing: 0.25em; color: var(--ink-soft); white-space: nowrap; }
+    /* 原来挂在首页头图的那张插画，挪来当队徽 */
+    .crew-emblem {
+      align-self: center;
+      flex: 0 0 auto;
+      width: 58px;
+      height: 58px;
+      margin-right: -6px;
+      padding: 4px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: 0 6px 14px rgba(35, 50, 77, 0.16);
+      transform: rotate(-3deg);
+    }
+
+    .crew-emblem img { width: 100%; height: 100%; display: block; object-fit: cover; }
+
+    .crew .section-head h2 { flex: 1 1 auto; }
+
     .crew-more { display: inline-flex; align-items: center; gap: 6px; color: var(--red); font-weight: 700; font-size: 13px; white-space: nowrap; }
     .crew-more:hover { text-decoration: underline; text-underline-offset: 4px; }
 

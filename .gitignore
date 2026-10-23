@@ -231,3 +231,11 @@ __marimo__/
 /proposals/
 
 docs/
+# 放行本次新增的手账文章，保留其他未跟踪文档的忽略行为。
+!/frontend/src/content/docs/
+/frontend/src/content/docs/*
+!/frontend/src/content/docs/weknora-deployment.md
+
+# 本机输出与系统文件：outputs/ 内有含凭证的备份，不入库。
+outputs/
+.DS_Store

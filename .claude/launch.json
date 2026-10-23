@@ -13,11 +13,9 @@
     },
     {
       "name": "hitl",
-      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeExecutable": ".venv/bin/python",
       "runtimeArgs": [
-        "docs.langchain.deepagent.humaninloop_server:app",
-        "--port",
-        "8099"
+        "docs/langchain/deepagent/hitl/server.py"
       ],
       "port": 8099
     }

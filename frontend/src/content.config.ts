@@ -6,6 +6,7 @@ const docs = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string().default(''),
+    category: z.string().default('其他'),
     order: z.number().default(999),
   }),
 });

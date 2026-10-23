@@ -1,6 +1,7 @@
 ---
 title: 欢迎
 description: 小完能实验室文档系统示例
+category: 开始
 order: 1
 ---
 

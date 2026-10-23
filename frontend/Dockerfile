@@ -16,7 +16,9 @@ WORKDIR /repo/frontend
 ARG PUBLIC_API_BASE_URL
 ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+# 国内构建默认走 npmmirror，海外可传 --build-arg NPM_REGISTRY=https://registry.npmjs.org
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+RUN npm config set registry "$NPM_REGISTRY" && npm ci
 COPY frontend ./
 # prebuild 会读取这些真实配置，核对三份开发文档是否仍与当前代码一致。
 COPY docker-compose.yml /repo/docker-compose.yml

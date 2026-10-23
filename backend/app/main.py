@@ -19,7 +19,7 @@ def _load_session():
 
 async def _warm_session(app: FastAPI) -> None:
     try:
-        app.state.session = await asyncio.to_thread(_load_session)
+        await _ensure_session(app)
     except Exception as e:  # noqa: BLE001
         app.state.session = None
         print(f"[warn] model session not loaded at startup: {e}")
@@ -31,6 +31,7 @@ async def lifespan(app: FastAPI):
     # 放后台任务预热，不卡启动——否则整个服务（含 /livez 和观测站调度）都会被这一次
     # 下载堵住。/readyz 和 /v1/remove-background 已经各自兜底：session 还没好会各自重试。
     app.state.session = None
+    app.state.session_lock = asyncio.Lock()
     warm_task = asyncio.create_task(_warm_session(app))
     app.state.infer_sem = asyncio.Semaphore(settings.max_inference_concurrency)
     app.state.upload_sem = asyncio.Semaphore(settings.max_upload_concurrency)
@@ -67,28 +68,35 @@ async def livez():
     return {"status": "alive"}
 
 
+async def _ensure_session(app: FastAPI):
+    """session 没好时在线程里补加载（首次要下载权重），不堵事件循环；锁避免并发重复下载。"""
+    session = getattr(app.state, "session", None)
+    if session is not None:
+        return session
+    async with app.state.session_lock:
+        session = getattr(app.state, "session", None)
+        if session is None:
+            try:
+                session = await asyncio.to_thread(_load_session)
+            except Exception:  # noqa: BLE001
+                raise HTTPException(status_code=503, detail="Model not ready")
+            app.state.session = session
+    return session
+
+
 @app.get("/readyz")
 async def readyz(request: Request):
-    session = getattr(request.app.state, "session", None)
-    if session is None:
-        try:
-            session = _load_session()
-            request.app.state.session = session
-        except Exception:  # noqa: BLE001
-            raise HTTPException(status_code=503, detail="Model not ready")
+    # 健康检查不排队等下载：已有线程在加载就直接报未就绪，让探针稍后重试。
+    if request.app.state.session is None and request.app.state.session_lock.locked():
+        raise HTTPException(status_code=503, detail="Model loading")
+    await _ensure_session(request.app)
     return {"status": "ready"}
 
 
 @app.post("/v1/remove-background")
 async def remove_background_endpoint(request: Request, file: UploadFile = File(...)):
     async with request.app.state.upload_sem:
-        session = getattr(request.app.state, "session", None)
-        if session is None:
-            try:
-                session = _load_session()
-                request.app.state.session = session
-            except Exception:  # noqa: BLE001
-                raise HTTPException(status_code=503, detail="Model not ready")
+        session = await _ensure_session(request.app)
         async with request.app.state.infer_sem:
             try:
                 return await process_upload(file, session)

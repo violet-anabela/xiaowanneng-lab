@@ -1,6 +1,7 @@
 ---
 title: Tavily 使用指南
 description: 面向 LLM / AI Agent 的联网搜索 API，以及它的官方 Python SDK tavily-python
+category: 周边工具
 order: 3
 ---
 

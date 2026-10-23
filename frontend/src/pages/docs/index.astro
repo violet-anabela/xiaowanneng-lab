@@ -9,11 +9,21 @@ const docs = Object.entries(modules)
       slug,
       title: mod.frontmatter?.title ?? slug,
       description: mod.frontmatter?.description ?? '',
+      category: mod.frontmatter?.category ?? '其他',
       order: Number(mod.frontmatter?.order ?? 999),
       url: `/docs/${slug}/`,
     };
   })
   .sort((a, b) => a.order - b.order);
+
+// 按分类分组，组的先后跟着组内第一篇的 order 走
+const groups = [];
+for (const doc of docs) {
+  const hit = groups.find((g) => g.name === doc.category);
+  if (hit) hit.items.push(doc);
+  else groups.push({ name: doc.category, items: [doc] });
+}
+let counter = 0;
 ---
 
 <Base title="巡逻手账 · 小完能实验室" description="考察队的巡逻手账：文章、笔记、复盘与过程记录。">
@@ -28,15 +38,20 @@ const docs = Object.entries(modules)
       <span class="log-count">共 {String(docs.length).padStart(2, '0')} 篇考察记录</span>
       <span class="log-label"><i class="paw-i" aria-hidden="true"></i> EXPEDITION LOGBOOK</span>
     </div>
-    {docs.map((doc, index) => (
-      <a class="log-entry" href={doc.url}>
-        <span class="log-no"><b>{String(index + 1).padStart(2, '0')}</b><i>LOG</i></span>
-        <div class="log-body">
-          <h2>{doc.title}</h2>
-          <p>{doc.description || '一篇来自考察途中的记录。'}</p>
-        </div>
-        <span class="log-go" aria-hidden="true">→</span>
-      </a>
+    {groups.map((group) => (
+      <>
+        <div class="log-group">{group.name}</div>
+        {group.items.map((doc) => (
+          <a class="log-entry" href={doc.url}>
+            <span class="log-no"><b>{String(++counter).padStart(2, '0')}</b><i>LOG</i></span>
+            <div class="log-body">
+              <h2>{doc.title}</h2>
+              <p>{doc.description || '一篇来自考察途中的记录。'}</p>
+            </div>
+            <span class="log-go" aria-hidden="true">→</span>
+          </a>
+        ))}
+      </>
     ))}
   </div>
 
@@ -60,6 +75,16 @@ const docs = Object.entries(modules)
     }
     .log-count { font-family: var(--font-serif); font-weight: 700; font-size: 15px; }
     .log-label { color: var(--ink-faint); font: 700 9px/1.4 var(--font-mono); letter-spacing: 0.22em; }
+
+    .log-group {
+      padding: 10px 24px;
+      border-bottom: 1px dashed var(--line);
+      background: rgba(35, 50, 77, 0.035);
+      font: 700 11px/1.4 var(--font-mono);
+      letter-spacing: 0.18em;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+    }
 
     .log-entry {
       display: grid;
